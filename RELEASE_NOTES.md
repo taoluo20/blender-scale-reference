@@ -1,43 +1,33 @@
-# Height Axis 1.5.0
+# Scale Reference 1.5.1
 
-This release makes the default ruler quieter and more responsive.
+The extension is now **Scale Reference**. The name covers both the viewport height ruler and optional physical reference figures.
 
-- **Only With Selection** starts enabled: select measurable geometry to display the live ruler. Uncheck it to restore mouse following.
-- Reference figures and **Show Half-Height Value** start disabled. The full-height value stays on the left; all crossbars and the existing **24 px** minor tick spacing remain.
-- Follow smoothing now defaults to **0.02 s**, retaining slight easing with a much faster response.
-- Mouse-mode measurements have no object/model caption, including old frozen mouse snapshots.
-- Change the half-height checkbox while frozen without moving the ruler or figure.
-- Saved object attachments retain their captured midpoint setting. Existing 1.4.0 attachment records keep their historical midpoint labels.
-- Existing explicit Freeze placements and object attachments remain visible independently of selection-only live filtering.
+- Updated extension name, sidebar panel, display checkbox, repository, new installer, documentation and native viewport screenshots.
+- Kept the internal `height_axis` extension ID and saved-data identifiers. Update the existing extension to preserve scenes, frozen placements and object attachments.
+- Imperial readouts already exist: **N > Scale > Units > ft / in**, or **Scene** to follow Blender's imperial unit system. Reference-height and width-offset inputs remain in metres.
+- Preserved selection-only live display, no figure and no half-height value by default; subtle **0.02 s** following and unchanged **24 px** minor ticks. Freeze and saved object attachments remain available independently of live selection filtering.
 
-![Selection ruler and its display controls](https://raw.githubusercontent.com/taoluo20/blender-height-axis/v1.5.0/docs/images/selected.png)
+![Scale Reference in Blender](https://raw.githubusercontent.com/taoluo20/blender-scale-reference/v1.5.1/docs/images/selected.png)
 
-Object attachments, batch visibility, gray reference figures, local model/font loading, automatic m/cm/mm detail and world-space Freeze remain available. Display and Freeze still start disabled; enable **Show Height Axis** in **N > Scale** to begin. New settings save with the blend file. Previously saved values remain as authored.
+Download `scale-reference-1.5.1.zip` and use **Preferences > Get Extensions > menu > Install from Disk**. Enable **Scale Reference**, then **N > Scale > Show Scale Reference**. `SHA256SUMS.txt` contains the package checksum. Previously saved settings remain as authored.
 
-Download `height-axis-1.5.0.zip` and install it through **Preferences > Get Extensions > menu > Install from Disk**. `SHA256SUMS.txt` contains the package checksum.
+Validation: **297 checks on Blender 5.2.2 LTS**, including imperial conversion, saved-file persistence and legacy attachment/Freeze compatibility. The final ZIP passed manifest validation, isolated installation and installed-namespace behavior checks. Ten public PNGs were refreshed from eight native non-isometric perspective states. Manifest minimum: Blender 4.5; this release was not tested on 4.5 or 5.1. See [validation](https://github.com/taoluo20/blender-scale-reference/blob/v1.5.1/docs/VALIDATION.md).
 
-Validation: **297 checks on Blender 5.2.2 LTS**, comprising the retained 267-check baseline and 30 checks for selection-only behavior, responsive easing, text toggles, save/reopen and old attachment/Freeze compatibility. Actual font loading is included. The final ZIP passed isolated installation and installed-namespace behavior checks; ten public images were refreshed from eight native perspective states. Manifest minimum: Blender 4.5; this update was not run on 4.5 or 5.1. See [validation](https://github.com/taoluo20/blender-height-axis/blob/v1.5.0/docs/VALIDATION.md).
-
-Optional mannequin examples use Epic's gray UE Manny. No Epic model or source assets are included in the installer or repository; see [source and attribution](https://github.com/taoluo20/blender-height-axis/blob/v1.5.0/docs/UE_MANNEQUIN.md). Extension code remains GPL-3.0-or-later.
+Optional figure screenshots use Epic's gray UE Manny. No Epic model or source assets are included in the repository or installer. See [source and attribution](https://github.com/taoluo20/blender-scale-reference/blob/v1.5.1/docs/UE_MANNEQUIN.md). Extension code remains GPL-3.0-or-later.
 
 ---
 
 ## 简体中文
 
-此版本减少默认显示内容，并提高跟随响应速度。
+插件现已更名为 **Scale Reference（尺度参考）**，同时涵盖视口高度尺和可选的实际比例参考人物。
 
-- 默认开启**仅选中时显示**，选中可测量几何体后显示实时尺子；取消勾选可恢复鼠标跟随。
-- 默认关闭参考人物及**显示半高数值**，保留左侧全高读数；横条与原有 **24 px** 小刻度间距保持不变。
-- 跟随缓动默认改为 **0.02 秒**，保留轻微平滑并更快响应。
-- 鼠标模式的尺寸下方不显示物体或模型名称，兼容旧版鼠标冻结快照。
-- 冻结后仍可切换半高文字，不移动尺子或人物。
-- 新绑定保存创建时的半高设置；1.4.0 旧绑定继续显示原来的中位文字。
-- 已显式冻结及已绑定的参照不受实时“仅选中时显示”过滤影响。
+- 更新扩展名称、侧栏面板、显示开关、仓库、新安装包、说明与真实视口截图。
+- 保留内部 `height_axis` 扩展 ID 及保存数据标识；更新现有扩展后，已有场景、冻结位置和物体绑定可继续使用。
+- 英制读数已经具备：进入 **N > Scale > Units / 单位**，选择 **ft / in**，或通过 **Scene / 场景**跟随 Blender 场景英制单位。参考高度及宽度偏移输入仍使用米。
+- 默认保持仅选中显示实时参照、无人物、无半高数值，跟随缓动为轻微的 **0.02 秒**，小刻度间距仍为 **24 px**；冻结与保存的物体绑定独立于实时选择过滤。
 
-物体绑定、批量显隐、中性灰参考人物、模型和字体加载、m/cm/mm 细节以及三维冻结继续保留。总显示开关与冻结仍默认关闭，进入 **N > Scale** 勾选**显示高度轴**即可开始。新增设置随 blend 文件保存，原来显式保存的设置保留。
+下载 `scale-reference-1.5.1.zip`，通过 **Preferences > Get Extensions > 菜单 > Install from Disk** 安装。启用 **Scale Reference** 后，在 **N > Scale** 勾选 **Show Scale Reference / 显示尺度参考**。`SHA256SUMS.txt` 提供校验值；原来保存的设置保留。
 
-下载 `height-axis-1.5.0.zip`，通过 **Preferences > Get Extensions > 菜单 > Install from Disk** 安装。`SHA256SUMS.txt` 提供校验值。
+验证：**Blender 5.2.2 LTS 的 297 项检查通过**，覆盖英制换算、保存重开与旧绑定/冻结兼容。最终 ZIP 通过清单、隔离安装和实际安装命名空间检查；8 种原生非等距透视状态重拍了 10 张公开 PNG。清单最低为 Blender 4.5，本轮未在 4.5 或 5.1 测试，详见[验证记录](https://github.com/taoluo20/blender-scale-reference/blob/v1.5.1/docs/VALIDATION.md)。
 
-验证：**Blender 5.2.2 LTS 的 297 项检查通过**，包含原有 267 项及新增 30 项选择过滤、轻微缓动、文字开关、保存重开与旧绑定/冻结兼容检查，并测试了实际字体加载。最终 ZIP 通过隔离安装和实际扩展命名空间行为检查；8 种原生透视状态重拍了 10 张公开图片。清单最低版本为 Blender 4.5，本轮未在 4.5 或 5.1 运行，详见[验证记录](https://github.com/taoluo20/blender-height-axis/blob/v1.5.0/docs/VALIDATION.md)。
-
-可选人物示例使用 Epic 的灰色 UE Manny；安装包和仓库不包含 Epic 模型或源资产，详见[来源与署名](https://github.com/taoluo20/blender-height-axis/blob/v1.5.0/docs/UE_MANNEQUIN.md)。插件代码继续采用 GPL-3.0-or-later。
+可选人物截图使用 Epic 灰色 UE Manny；仓库与安装包不包含 Epic 模型或源资产，详见[来源与署名](https://github.com/taoluo20/blender-scale-reference/blob/v1.5.1/docs/UE_MANNEQUIN.md)。插件代码继续采用 GPL-3.0-or-later。

@@ -20,7 +20,7 @@ def main():
     output = ROOT / 'verification'
     output.mkdir(exist_ok=True)
     reports = []
-    with tempfile.TemporaryDirectory(prefix='height-axis-tests-') as temporary:
+    with tempfile.TemporaryDirectory(prefix='scale-reference-tests-') as temporary:
         env = os.environ.copy()
         if args.font:
             env['HEIGHT_AXIS_TEST_FONT'] = str(Path(args.font).resolve())

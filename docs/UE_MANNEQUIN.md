@@ -4,7 +4,7 @@
 
 Optional figure screenshots use Epic's actual **Manny** mannequin, `SKM_Manny_Simple`, from the installed **Unreal Engine 5.8.2** template Characters content. The 1.5.0 default preview contains no figure. It is not an approximation or an AI-generated character. Epic identifies Manny and Quinn in the [Third Person template documentation](https://dev.epicgames.com/documentation/unreal-engine/third-person-template-in-unreal-engine?lang=en-US).
 
-The mesh is exported with Unreal's FBX exporter into an isolated local project, then saved as a gray Blender reference. The local material uses equal RGB channels, roughness 0.72 and zero metallic. Height Axis also uses neutral-gray vertex shading with its own depth buffer; changing only the imported material would not affect that overlay. Physical height, normalization, alpha, reference visibility, object attachments and live following remain active.
+The mesh is exported with Unreal's FBX exporter into an isolated local project, then saved as a gray Blender reference. The local material uses equal RGB channels, roughness 0.72 and zero metallic. Scale Reference also uses neutral-gray vertex shading with its own depth buffer; changing only the imported material would not affect that overlay. Physical height, normalization, alpha, reference visibility, object attachments and live following remain active.
 
 ## Assets and license
 
@@ -20,7 +20,7 @@ Epic Games owns the Unreal Engine trademarks and the Manny asset. © 1998–2026
 
 可选人物示意图使用 Epic 官方的真实 **Manny** 人偶，来源为已安装 **Unreal Engine 5.8.2** 模板 Characters 内容中的 `SKM_Manny_Simple`，不是近似人物或 AI 生成角色。1.5.0 默认预览不显示人物。Epic 的[第三人称模板说明](https://dev.epicgames.com/documentation/unreal-engine/third-person-template-in-unreal-engine?lang=en-US)介绍了 Manny 与 Quinn。
 
-使用独立本地项目通过 Unreal FBX 导出，再保存为灰色 Blender 参照。本地材质采用 RGB 等值、粗糙度 0.72、金属度 0。Height Axis 的独立深度缓冲叠加绘制也改为中性灰顶点着色；只修改导入材质不会改变该叠加显示。尺寸归一化、物理参考身高、透明度、独立开关、对象绑定与实时跟随均保留。
+使用独立本地项目通过 Unreal FBX 导出，再保存为灰色 Blender 参照。本地材质采用 RGB 等值、粗糙度 0.72、金属度 0。Scale Reference 的独立深度缓冲叠加绘制也改为中性灰顶点着色；只修改导入材质不会改变该叠加显示。尺寸归一化、物理参考身高、透明度、独立开关、对象绑定与实时跟随均保留。
 
 ### 资产与许可
 

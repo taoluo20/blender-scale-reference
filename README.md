@@ -1,18 +1,20 @@
-# Height Axis for Blender
+# Scale Reference for Blender
 
 A viewport height ruler and reference figure that stay on the **view-left side** of your selection or mouse. Freeze them wherever you want a lasting scale reference.
 
 **English** · [简体中文](#简体中文)
 
-Version **1.5.0** defaults to **Only With Selection**, no reference figure and no half-height value. Enable **Show Height Axis** and select geometry to measure it. Following now uses a subtle **0.02 s** response; minor tick spacing remains **24 px**. Mouse following and the midpoint value are optional checkboxes, and existing Freeze placements and object attachments remain available.
+**Scale Reference 1.5.1** is the renamed extension. Its internal ID remains `height_axis`, so existing scenes, frozen placements and object attachments continue to load. Update the existing extension rather than installing a second copy.
+
+Version **1.5.1** defaults to **Only With Selection**, no reference figure and no half-height value. Enable **Show Scale Reference** and select geometry to measure it. Following now uses a subtle **0.02 s** response; minor tick spacing remains **24 px**. Mouse following and the midpoint value are optional checkboxes, and existing Freeze placements and object attachments remain available.
 
 Version **1.4.0** adds persistent object attachments and a batch visibility list while preserving live following and Freeze. Reference figures use neutral-gray shading. See [object attachments](docs/OBJECT_ATTACHMENTS.md) for the new workflow.
 
 Version **1.3.0** adds a translucent white ruler, adjustable minor tick spacing, left-only crossbars, appearance controls, smooth world-space following and zoom-adaptive detail. Unit and detail transitions keep one readable measurement, and sidebar controls are grouped by purpose.
 
-![Height Axis in Blender: selection height and the Scale sidebar](docs/images/selected.png)
+![Scale Reference in Blender: selection height and the Scale sidebar](docs/images/selected.png)
 
-[Download the latest release](https://github.com/taoluo20/blender-height-axis/releases/latest) · [Visual guide](docs/VISUAL_GUIDE.md) · [Features and behavior](docs/FEATURES_AND_LOGIC.md) · [Build and test](docs/DEVELOPMENT.md)
+[Download the latest release](https://github.com/taoluo20/blender-scale-reference/releases/latest) · [Visual guide](docs/VISUAL_GUIDE.md) · [Features and behavior](docs/FEATURES_AND_LOGIC.md) · [Build and test](docs/DEVELOPMENT.md)
 
 ## Three placement states
 
@@ -28,11 +30,13 @@ Use **Object Attachments → Attach to Object** to retain a reference beside the
 
 ## Install and use
 
-1. Download `height-axis-1.5.0.zip` from the [1.5.0 release](https://github.com/taoluo20/blender-height-axis/releases/tag/v1.5.0).
-2. In Blender, open **Edit → Preferences → Get Extensions → menu → Install from Disk**, select the ZIP, and enable **Height Axis**.
-3. In the 3D Viewport press **N**, open **Scale**, enable **Show Height Axis**, and select geometry.
+1. Download `scale-reference-1.5.1.zip` from the [1.5.1 release](https://github.com/taoluo20/blender-scale-reference/releases/tag/v1.5.1).
+2. In Blender, open **Edit → Preferences → Get Extensions → menu → Install from Disk**, select the ZIP, and enable **Scale Reference**.
+3. In the 3D Viewport press **N**, open **Scale**, enable **Show Scale Reference**, and select geometry.
 
 Use **Load Reference Figure** to choose a `.blend`, `.fbx`, `.obj`, `.gltf`, `.glb` or `.stl` model. Adjust **Reference Height (m)**, **Figure Rotation** and **Figure Opacity**. The figure has its own display checkbox.
+
+For imperial readouts, choose **N > Scale > Units > ft** or **in**. **Scene** follows Blender's scene unit system. Reference-height and width-offset inputs remain in metres, as their labels indicate.
 
 Enable **Freeze** to preserve the current placement. In mouse mode you can move into the sidebar to click it: the last visible viewport placement is retained. Placement and reference data save with the `.blend` file.
 
@@ -56,7 +60,7 @@ The interface uses English source labels and includes Simplified Chinese transla
 
 ## Compatibility and limits
 
-The manifest declares **Blender 4.5+**. Version 1.5.0 passed **297 checks on Blender 5.2.2 LTS**, including actual font loading and old attachment/Freeze compatibility. Its final ZIP passed isolated installation, new-default and attachment checks. Eight native perspective states produced ten updated public screenshots, including the English and Chinese controls. Earlier baseline checks ran on 5.1.2; this update was not rerun on 4.5 or 5.1. See [validation details](docs/VALIDATION.md).
+The manifest declares **Blender 4.5+**. Version 1.5.1 passed **297 checks on Blender 5.2.2 LTS**, including actual font loading and old attachment/Freeze compatibility. Its final ZIP passed isolated installation, new-default and attachment checks. Eight native perspective states produced ten updated public screenshots, including the English and Chinese controls. Earlier baseline checks ran on 5.1.2; this update was not rerun on 4.5 or 5.1. See [validation details](docs/VALIDATION.md).
 
 - Height follows **world Z**, not an object's local axis. In Edit Mode the editable mesh is measured before final modifiers.
 - Unrealized instances are not included in the selection height. Realize or convert them first when needed.
@@ -83,11 +87,13 @@ Optional figure examples show Epic's UE 5.8.2 Manny in neutral gray; the default
 
 ## 简体中文
 
-**1.5.0** 默认开启**仅选中时显示**、关闭参考人物和半高数值。勾选**显示高度轴**并选择几何体即可测量；跟随缓动默认改为轻微的 **0.02 秒**，小刻度间距保持 **24 px**。鼠标跟随与半高文字可通过开关恢复，已有冻结和物体绑定继续保留。
+**Scale Reference（尺度参考）1.5.1** 为更名版本。内部 ID 继续使用 `height_axis`，已有场景、冻结位置和物体绑定可继续读取。请更新现有扩展，无需另装一份。
+
+**1.5.1** 默认开启**仅选中时显示**、关闭参考人物和半高数值。勾选**显示尺度参考**并选择几何体即可测量；跟随缓动默认改为轻微的 **0.02 秒**，小刻度间距保持 **24 px**。鼠标跟随与半高文字可通过开关恢复，已有冻结和物体绑定继续保留。
 
 **1.4.0** 新增持续绑定物体的参照与批量显隐列表，实时跟随和 Freeze 继续独立运行，参考人物改为中性灰立体着色。新用法见[物体绑定说明](docs/OBJECT_ATTACHMENTS.md)。
 
-Height Axis 是 Blender 的视口高度尺与参考人物工具。参照始终位于选中物体或鼠标点的**当前视口左侧**，也可以冻结在需要保留的三维位置。
+Scale Reference 是 Blender 的视口高度尺与参考人物工具。参照始终位于选中物体或鼠标点的**当前视口左侧**，也可以冻结在需要保留的三维位置。
 
 **1.3.0** 新增白色半透明尺子、可调小刻度间距、仅向左延伸的横线、外观设置、世界空间平滑跟随及随缩放变化的显示细节。单位与远近过渡保留清晰的单套读数，侧栏按用途分组。
 
@@ -105,11 +111,13 @@ Height Axis 是 Blender 的视口高度尺与参考人物工具。参照始终�
 
 ### 安装与使用
 
-1. 从 [1.5.0 发布页](https://github.com/taoluo20/blender-height-axis/releases/tag/v1.5.0)下载 `height-axis-1.5.0.zip`。
-2. 在 Blender 打开 **Edit → Preferences → Get Extensions → 右上角菜单 → Install from Disk**，选择 ZIP 并启用 Height Axis。
-3. 3D 视口按 **N**，打开 **Scale** 页签，勾选 **Show Height Axis / 显示高度轴**并选择几何物体。
+1. 从 [1.5.1 发布页](https://github.com/taoluo20/blender-scale-reference/releases/tag/v1.5.1)下载 `scale-reference-1.5.1.zip`。
+2. 在 Blender 打开 **Edit → Preferences → Get Extensions → 右上角菜单 → Install from Disk**，选择 ZIP 并启用 Scale Reference。
+3. 3D 视口按 **N**，打开 **Scale** 页签，勾选 **Show Scale Reference / 显示尺度参考**并选择几何物体。
 
 点击 **Load Reference Figure / 加载参考人物**，选择 Blend、FBX、OBJ、glTF/GLB 或 STL 文件。可调整参考身高、人物朝向和不透明度；人物有独立显示开关。
+
+英制读数可在 **N > Scale > Units / 单位** 中选择 **ft（英尺）**或 **in（英寸）**；**Scene / 场景**跟随 Blender 场景单位。参考高度与宽度偏移的输入仍按标签使用米。
 
 勾选 **Freeze / 停止跟随** 即固定位置。未选中时，将鼠标移入侧栏点击也能保留该视口最后显示的参照位置。冻结位置和参考数据随 `.blend` 保存。
 
@@ -125,7 +133,7 @@ Height Axis 是 Blender 的视口高度尺与参考人物工具。参照始终�
 
 跟随在世界空间平滑变化，宽度偏移默认位于选中范围的水平包围之外，负值可向内靠近；连接线默认关闭。缩放时逐层显示十进制刻度，最细到 1 mm，自动单位在 m / cm / mm 之间变化。远景及俯视收为一个高度数值和较小的物体名称；过渡期间每套读数只绘制一次。
 
-清单声明 Blender 4.5+；1.5.0 在 **Blender 5.2.2 LTS 通过 297 项检查**，包含实际字体加载与旧绑定/冻结兼容。最终 ZIP 已验证隔离安装、新默认值及绑定操作；8 种原生透视状态生成了 10 张更新后的公开截图，包含中英文控件。较早的基础检查覆盖 5.1.2；本次没有在 4.5 或 5.1 重跑。详见[验证记录](docs/VALIDATION.md)。
+清单声明 Blender 4.5+；1.5.1 在 **Blender 5.2.2 LTS 通过 297 项检查**，包含实际字体加载与旧绑定/冻结兼容。最终 ZIP 已验证隔离安装、新默认值及绑定操作；8 种原生透视状态生成了 10 张更新后的公开截图，包含中英文控件。较早的基础检查覆盖 5.1.2；本次没有在 4.5 或 5.1 重跑。详见[验证记录](docs/VALIDATION.md)。
 
 - 高度按世界 Z 轴测量。编辑模式读取修改器之前的当前编辑网格。
 - 未实体化实例不计入选中高度，需要时先 Realize Instances 或转换为实际几何体。

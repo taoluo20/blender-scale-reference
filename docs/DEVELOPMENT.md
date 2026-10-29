@@ -23,7 +23,7 @@ python tools/build.py
 python tools/build.py --blender "/path/to/blender"
 ```
 
-The installer is `dist/height-axis-<version>.zip`, with `blender_manifest.toml` at the archive root. `dist/SHA256SUMS.txt` records the package hash. Fixed timestamps and sorted entries make repeated builds reproducible within the same Python/zlib toolchain. With `--blender`, Blender validates the result in a temporary user configuration.
+The installer is `dist/scale-reference-<version>.zip`, with `blender_manifest.toml` at the archive root. `dist/SHA256SUMS.txt` records the package hash. Fixed timestamps and sorted entries make repeated builds reproducible within the same Python/zlib toolchain. With `--blender`, Blender validates the result in a temporary user configuration.
 
 ## Checks
 

@@ -1,4 +1,4 @@
-# Height Axis project preferences
+# Scale Reference project preferences
 
 - Default previews, screenshots, visual reviews and saved handoff views use a **non-isometric perspective** view.
 - In Blender, set `RegionView3D.view_perspective = 'PERSP'`. Prefer an eye-level view with a modest horizontal turn so depth remains visible. The approved example uses about 12 degrees of horizontal turn; this is a reference, not a fixed angle requirement.

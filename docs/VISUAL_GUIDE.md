@@ -34,7 +34,7 @@ Visibility, **Only With Selection**, Freeze, reference height and units stay in 
 
 | Control | Purpose |
 | --- | --- |
-| Show Height Axis | Ruler visibility |
+| Show Scale Reference | Ruler visibility |
 | Only With Selection | Hide the live guide without selected geometry; keep frozen and attached references |
 | Freeze | Capture or release world-space placement |
 | Reference Height (m) | Physical height of the mouse ruler and reference figure |
@@ -88,7 +88,7 @@ The screenshots are exported from a real Blender viewport. New previews default 
 
 | 控件 | 用途 |
 | --- | --- |
-| Show Height Axis / 显示高度轴 | 控制尺子显示 |
+| Show Scale Reference / 显示尺度参考 | 控制尺子显示 |
 | Only With Selection / 仅选中时显示 | 未选中几何体时隐藏实时参照，保留冻结和绑定 |
 | Freeze / 停止跟随 | 捕获或解除三维固定位置 |
 | Reference Height (m) / 参考高度 | 鼠标参考尺与人物的真实身高，单位为米 |

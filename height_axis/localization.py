@@ -24,7 +24,7 @@ _ZH = {
     'Delete all attachment records in this scene; keep every target object': '删除本场景的全部绑定参照记录，保留所有目标物体',
     'Missing target': '目标已删除',
     'Missing targets are skipped': '已跳过缺失的目标',
-    'Show Height Axis': '显示高度轴',
+    'Show Scale Reference': '显示尺度参考',
     'Only With Selection': '仅选中时显示',
     'Hide live guides without selected geometry; keep frozen and attached references': '未选中几何物体时隐藏实时参照，保留冻结和绑定参照',
     'No selection': '未选中物体',

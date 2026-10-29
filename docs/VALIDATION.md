@@ -2,6 +2,12 @@
 
 **English** · [简体中文](#简体中文)
 
+## 1.5.1 Scale Reference rename - 2026-10-29
+
+The renamed source retained **297 passing checks on Blender 5.2.2 LTS** with a real TTF font. Manifest validation, reproducible builds and isolated installation passed. The installed extension exposes the new panel and checkbox names, converts ft/in and scene-imperial units correctly, and reopens the actual 1.5.0 review scene with its two object attachments intact. The internal extension ID and saved-data identifiers remain unchanged.
+
+Eight native non-isometric perspective states refreshed all ten public PNGs using the new English and Chinese UI. Each state reported no draw error. The installer contains extension source only; review scenes and third-party model geometry remain local and ignored. Blender 4.5 and 5.1 were not exercised in this release.
+
 ## 1.5.0 selection defaults - 2026-10-29
 
 Blender 5.2.2 LTS passed **297 checks** in isolated factory-startup configurations with a real TTF font: the retained 267-check baseline and 30 new checks. These exercise default selection-only/no-figure/no-midpoint settings, 0.02 s response timing, deselect/reselect, unmeasurable selections, optional mouse following without captions, old mouse Freeze captions and padding, explicit Freeze and attachment independence, full-height continuity, unchanged frozen geometry/crossbars, saved checkbox overrides and 1.4.0 attachment migration. The new midpoint option controls text only; 24 px ticks remain. This development run did not exercise Blender 4.5 or 5.1.
@@ -56,6 +62,12 @@ This record describes the exercised cases. Unlisted Blender versions, import var
 ---
 
 ## 简体中文
+
+### 1.5.1 Scale Reference 更名 - 2026-10-29
+
+更名后源码使用真实 TTF 字体，在 **Blender 5.2.2 LTS 保持 297 项检查通过**；清单校验、可重复构建与隔离安装通过。实际安装的扩展显示新面板及显示开关名称，ft/in 和场景英制换算正确，并成功读取真实的 1.5.0 审查工程及其中两条物体绑定。内部扩展 ID 与保存数据标识保持不变。
+
+8 种原生非等距透视状态重拍了全部 10 张公开 PNG，使用新版中英文界面，均无绘制错误。安装包仅包含扩展源码；审查工程与第三方人物网格保持本地忽略。本版本未在 Blender 4.5 或 5.1 运行验证。
 
 ### 1.5.0 选中显示默认值 - 2026-10-29
 

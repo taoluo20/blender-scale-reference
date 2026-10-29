@@ -40,7 +40,7 @@ assert 0 < step <= 3.2 and values[0] == 0 and max(values) <= 3.2
 assert len(values) <= 12
 assert core.nice_step(0, 100) > 0
 assert core.format_number(0.000000000001) == '0'
-package = ROOT / 'dist' / f"height-axis-{manifest['version']}.zip"
+package = ROOT / 'dist' / f"scale-reference-{manifest['version']}.zip"
 hashes = []
 for _ in range(2):
     subprocess.run([sys.executable, str(ROOT / 'tools' / 'build.py')], check=True)

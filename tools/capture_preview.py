@@ -28,6 +28,7 @@ bpy.context.preferences.filepaths.temporary_directory = str(TEMP)
 bpy.context.preferences.view.language = 'en_US'
 bpy.context.preferences.view.use_translate_interface = True
 bpy.context.preferences.view.show_splash = False
+bpy.context.preferences.view.show_tooltips = False
 addon.VIEW3D_PT_height_axis_appearance.bl_options = set()
 addon.register()
 scene = bpy.context.scene

@@ -2,6 +2,10 @@
 
 **English** · [简体中文](#简体中文)
 
+## 1.5.1 naming review
+
+Recaptured all ten public PNGs from eight native perspective states for the **Scale Reference** panel and **Show Scale Reference** checkbox. English and Chinese labels fit the sidebar; default selection, optional mouse/Freeze, appearance, midpoint and object-attachment states retain the 1.5.0 behavior. All captured states reported no draw errors.
+
 ## 1.5.0 default display review
 
 The default review now shows a selected-object ruler without a figure or half-height value, using 0.02 s following and unchanged 24 px ticks. Eight actual non-isometric perspective states cover selection, deselection hiding, nameless optional mouse following, nameless mouse Freeze, custom appearance, optional half-height, Chinese UI and optional gray-Manny bindings. Ten public PNGs were refreshed. The binding example keeps two saved references beside A/B and a separate live reference beside C, with the list visible and labels separated. All states reported no draw errors. See the [visual guide](VISUAL_GUIDE.md) and [validation record](VALIDATION.md).
@@ -28,6 +32,10 @@ The initial Blender 5.2.2 integration run passed 188 checks, including four new 
 ---
 
 ## 简体中文
+
+### 1.5.1 更名审查
+
+围绕 **Scale Reference** 面板与 **Show Scale Reference / 显示尺度参考**开关，从 8 种真实透视状态重拍全部 10 张公开 PNG。中英文标签在侧栏内完整显示；默认选中、可选鼠标/冻结、外观、半高和绑定状态保持 1.5.0 行为，所有截图状态均无绘制异常。
 
 ### 1.5.0 默认显示审查
 

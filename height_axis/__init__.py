@@ -507,7 +507,7 @@ def _draw():
     except Exception:
         _last_error = traceback.format_exc()
     if _last_error and _last_error != previous_error:
-        print('[Height Axis] ' + _last_error)
+        print('[Scale Reference] ' + _last_error)
 
 
 def _redraw():
@@ -598,7 +598,7 @@ def _undo_changed(*_args):
 
 
 class HEIGHTAXIS_Settings(PropertyGroup):
-    enabled: BoolProperty(name='Show Height Axis', default=False,
+    enabled: BoolProperty(name='Show Scale Reference', default=False,
                           description='Show the selected geometry height, or a mouse-following reference ruler', update=_changed)
     only_with_selection: BoolProperty(name='Only With Selection', default=True, update=_changed,
                                       description='Hide live guides without selected geometry; keep frozen and attached references')
@@ -712,7 +712,7 @@ class VIEW3D_OT_height_axis_clear_reference(Operator):
 
 class VIEW3D_OT_height_axis_tracker(Operator):
     bl_idname = 'view3d.height_axis_tracker'
-    bl_label = 'Height Axis Mouse Tracker'
+    bl_label = 'Scale Reference Mouse Tracker'
     bl_options = {'INTERNAL'}
 
     def invoke(self, context, event):
@@ -760,7 +760,7 @@ class VIEW3D_OT_height_axis_tracker(Operator):
 
 
 class VIEW3D_PT_height_axis(Panel):
-    bl_label = 'Height Axis'
+    bl_label = 'Scale Reference'
     bl_idname = 'VIEW3D_PT_height_axis'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'

@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.1 - Scale Reference
+
+- Rename the extension, panel, display checkbox, repository and new installer to **Scale Reference**.
+- Refresh English and Simplified Chinese documentation and native viewport screenshots.
+- Retain the internal extension ID and saved-data identifiers for existing scenes, frozen placements and attachments.
+- Document the existing ft/in and scene-imperial readouts. Keep the 1.5.0 measurement behavior and defaults.
+
 ## 1.5.0 - Selection Defaults and Responsive Following
 
 - Add **Only With Selection**, enabled by default, to hide live guides without selected measurable geometry. Keep existing Freeze placements and object attachments.
@@ -63,6 +70,13 @@
 ---
 
 ## 简体中文
+
+### 1.5.1 - Scale Reference（尺度参考）
+
+- 扩展、面板、显示开关、仓库及新安装包统一更名为 **Scale Reference**。
+- 更新英文及简体中文说明和真实视口截图。
+- 保留内部扩展 ID 与保存数据标识，兼容已有场景、冻结位置及物体绑定。
+- 补充已有 ft/in 与场景英制读数的入口说明，保留 1.5.0 的测量行为和默认设置。
 
 ### 1.5.0 - 选中显示默认值与轻微跟随
 

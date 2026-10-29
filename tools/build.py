@@ -20,7 +20,7 @@ def main():
     parser.add_argument('--blender', help='Blender executable for extension validation')
     args = parser.parse_args()
     manifest = tomllib.loads((SOURCE / 'blender_manifest.toml').read_text(encoding='utf-8'))
-    target = ROOT / 'dist' / f"height-axis-{manifest['version']}.zip"
+    target = ROOT / 'dist' / f"scale-reference-{manifest['version']}.zip"
     target.parent.mkdir(exist_ok=True)
     with zipfile.ZipFile(target, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
         for path in sorted(SOURCE.rglob('*')):
@@ -33,7 +33,7 @@ def main():
     digest = hashlib.sha256(target.read_bytes()).hexdigest()
     (target.parent / 'SHA256SUMS.txt').write_text(f'{digest}  {target.name}\n', encoding='utf-8')
     if args.blender:
-        with tempfile.TemporaryDirectory(prefix='height-axis-build-') as temporary:
+        with tempfile.TemporaryDirectory(prefix='scale-reference-build-') as temporary:
             env = os.environ.copy()
             for key, folder in [('BLENDER_USER_CONFIG', 'config'), ('BLENDER_USER_SCRIPTS', 'scripts'),
                                 ('BLENDER_USER_EXTENSIONS', 'extensions')]:
