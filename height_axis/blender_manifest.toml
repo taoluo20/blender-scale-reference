@@ -1,0 +1,17 @@
+schema_version = "1.0.0"
+id = "height_axis"
+version = "1.2.1"
+name = "Height Axis"
+tagline = "A height ruler and model reference following selection or mouse"
+maintainer = "Tao Luo (O_Pisces)"
+website = "https://github.com/taoluo20/blender-height-axis"
+type = "add-on"
+tags = ["3D View"]
+blender_version_min = "4.5.0"
+license = ["SPDX:GPL-3.0-or-later"]
+
+[permissions]
+files = "Load the reference model file chosen by the user"
+
+[build]
+paths_exclude_pattern = ["__pycache__/", "*.pyc"]
