@@ -86,6 +86,12 @@ def clear():
     _densities.clear()
 
 
+def forget_view(key):
+    for stored in set(_states) | set(_densities):
+        if stored[:len(key)] == key:
+            forget(stored)
+
+
 def retain(keys):
     for key in set(_states) | set(_densities):
         if key not in keys:

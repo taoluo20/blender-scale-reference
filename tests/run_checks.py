@@ -29,7 +29,8 @@ def main():
             folder = Path(temporary) / name
             folder.mkdir()
             env[key] = str(folder)
-        for filename in ('check_blender.py', 'check_reference.py', 'check_freeze.py', 'check_appearance.py', 'check_motion.py'):
+        for filename in ('check_blender.py', 'check_reference.py', 'check_freeze.py', 'check_appearance.py',
+                         'check_motion.py', 'check_attachments.py', 'check_draw_errors.py'):
             result = subprocess.run([args.blender, '--background', '--factory-startup', '--python-exit-code', '1',
                                      '--python', str(ROOT / 'tests' / filename)], capture_output=True, env=env)
             (output / (Path(filename).stem + '.log')).write_bytes(result.stdout + result.stderr)
@@ -38,7 +39,7 @@ def main():
                 raise SystemExit(result.returncode)
             print(f'{filename}: passed')
             report = next(line.split('=', 1)[1] for line in result.stdout.decode('utf-8', errors='replace').splitlines()
-                          if line.startswith(('HEIGHT_AXIS_CHECKS=', 'REFERENCE_CHECKS=', 'FREEZE_CHECKS=', 'APPEARANCE_CHECKS=', 'MOTION_CHECKS=')))
+                          if line.startswith(('HEIGHT_AXIS_CHECKS=', 'REFERENCE_CHECKS=', 'FREEZE_CHECKS=', 'APPEARANCE_CHECKS=', 'MOTION_CHECKS=', 'ATTACHMENT_CHECKS=', 'DRAW_ERROR_CHECKS=')))
             reports.append(json.loads(report))
     print(json.dumps([{'blender': item['blender'], 'passed': item['passed']} for item in reports], indent=2))
 

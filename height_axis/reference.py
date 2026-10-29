@@ -11,8 +11,10 @@ from mathutils import Matrix, Vector
 
 TRIANGLE_LIMIT = 150_000
 SUPPORTED = {'.blend', '.fbx', '.obj', '.gltf', '.glb', '.stl'}
+REFERENCE_COLOR = (0.65, 0.65, 0.65)
 _batch_key = None
 _batch = None
+_batches = {}
 _mesh_shader = None
 _image_shader = None
 _screen_batch = None
@@ -181,8 +183,8 @@ def screen_bounds(context, mesh, matrix, project):
             max(p.x for p in points), max(p.y for p in points))
 
 
-def reference_layout(context, guide, project, scene_scale, ignore_freeze=False, ignore_visibility=False):
-    settings = context.scene.height_axis
+def reference_layout(context, guide, project, scene_scale, ignore_freeze=False, ignore_visibility=False, settings=None):
+    settings = settings or context.scene.height_axis
     mesh = settings.reference_mesh
     if (not settings.show_reference and not ignore_visibility) or mesh is None:
         return None
@@ -229,18 +231,24 @@ def _prepare_batch(mesh):
     key = (mesh.as_pointer(), len(mesh.vertices), len(mesh.polygons))
     if _batch_key == key and _batch is not None:
         return
+    if key in _batches:
+        _batch_key, _batch = key, _batches[key]
+        return
     mesh.calc_loop_triangles()
     positions = [tuple(vertex.co) for vertex in mesh.vertices]
     light = Vector((0.35, -0.7, 0.8)).normalized()
     colors = []
     for vertex in mesh.vertices:
         shade = 0.42 + 0.58 * max(0, vertex.normal.dot(light))
-        colors.append((0.42 * shade, 0.76 * shade, 0.96 * shade, 1))
+        colors.append((*[channel * shade for channel in REFERENCE_COLOR], 1))
     if _mesh_shader is None:
         _mesh_shader = gpu.shader.from_builtin('SMOOTH_COLOR')
     _batch = batch_for_shader(_mesh_shader, 'TRIS', {'pos': positions, 'color': colors},
                               indices=[tuple(tri.vertices) for tri in mesh.loop_triangles])
     _batch_key = key
+    if len(_batches) >= 32:
+        _batches.pop(next(iter(_batches)))
+    _batches[key] = _batch
 
 
 def draw_reference(context, model, opacity=1.0):
@@ -284,7 +292,7 @@ def draw_reference(context, model, opacity=1.0):
             _screen_size = (width, height)
         _image_shader.bind()
         _image_shader.uniform_sampler('image', _offscreen.texture_color)
-        _image_shader.uniform_float('color', (1, 1, 1, context.scene.height_axis.reference_opacity * opacity))
+        _image_shader.uniform_float('color', (1, 1, 1, model.get('opacity', context.scene.height_axis.reference_opacity) * opacity))
         _screen_batch.draw(_image_shader)
     finally:
         gpu.state.viewport_set(*old_viewport)
@@ -299,3 +307,4 @@ def clear_gpu():
         _offscreen.free()
     _offscreen, _batch, _batch_key, _screen_batch = None, None, None, None
     _screen_size, _mesh_shader, _image_shader = None, None, None
+    _batches.clear()

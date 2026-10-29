@@ -2,6 +2,12 @@
 
 **English** · [简体中文](#简体中文)
 
+## 1.4.0 object attachments — 2026-10-29
+
+The subsequent gray-preview step retained all **259 checks**. Epic's actual UE 5.8.2 `SKM_Manny_Simple` was exported locally, imported as 92,178 triangles, and used for nine native perspective captures including A attached with B live and two attachments with live C. Every captured view reported `PERSP` and no draw errors. All documented preview PNGs were refreshed. UE source and derived model data remain ignored and excluded from the ZIP; automated fixtures remain self-authored. See [preview provenance](UE_MANNEQUIN.md).
+
+The final Blender 5.2.2 LTS run passed **267 checks**: the complete 200-check baseline, 59 attachment checks and 8 drawing-error checks. The final review reproduced repeated console logging on consecutive failed frames and corrected both model and layout error reporting. Regression checks exercise continuous failure, recovery, failure recurrence and continued drawing of healthy references. Attachment checks cover separate live and retained guides, multiple targets, ruler-only/figure-only/both, target transforms and evaluated modifiers, view-left placement, captured meshes/styles, batch visibility, scene isolation, save/reopen, disable/reenable, target rename/delete/unlink, safe record deletion and Overlays. Native perspective captures cover A attached with B live, two persistent attachments, batch hiding, target scaling/orbit, separate display modes, live-figure removal and Chinese UI. Native Blender Undo with explicit MCP checkpoints restored both deleted records and an orphan reference mesh; target objects remained intact. All views use non-isometric perspective. These checks cover the final 1.4.0 source and installer.
+
 ## Tick spacing and left marks — 2026-10-29
 
 Blender 5.2.2 LTS passed **200 checks**: geometry/lifecycle 22, reference imports 61, Freeze 16, appearance/fonts 27 and motion/transitions/localization 74. New cases cover adjustable physical tick layers, continuous opacity, scene persistence while frozen, unchanged Freeze geometry and horizontal left-only marks under reversed projections. Native eye-level perspective captures compare 6 px dense and 24 px default spacing, frozen 6/48 px spacing, zoomed frozen detail and the Chinese control. All captured states reported no draw errors. Preview defaults and the saved review blend use non-isometric perspective. The rebuilt ZIP passed manifest validation, source-byte comparisons and reproducibility checks; installation and enabling succeeded in a temporary Blender configuration. These checks cover the final 1.3.0 package.
@@ -44,6 +50,12 @@ This record describes the exercised cases. Unlisted Blender versions, import var
 ---
 
 ## 简体中文
+
+### 1.4.0 物体绑定 — 2026-10-29
+
+后续灰色预览步骤继续保持 **259 项检查通过**。本地导出 Epic UE 5.8.2 的真实 `SKM_Manny_Simple`，导入后为 92,178 个三角面，拍摄了 9 张原生透视截图，包含 A 绑定且 B 实时，以及两个绑定加 C 实时。每张均为 `PERSP`，无绘制异常；文档预览 PNG 已全部更新。UE 原始及衍生模型数据保持忽略并排除在 ZIP 外，自动夹具仍为自制。详见[预览来源](UE_MANNEQUIN.md)。
+
+最终 Blender 5.2.2 LTS 检查通过 **267 项**：完整保留原有 200 项，新增 59 项绑定检查及 8 项绘制异常检查。最终审查复现了连续失败帧重复打印的问题，并修复人物绘制及布局异常的日志处理；回归检查覆盖持续失败、恢复、再次失败及其他参照继续绘制。绑定检查覆盖实时参照与绑定共存、多目标、仅尺/仅人物/二者、目标变换及修改器、视口左侧、网格与外观快照、批量显隐、场景隔离、保存重开、禁用再启用、目标改名/删除/移出场景、记录安全删除及 Overlays。原生透视截图覆盖 A 绑定且 B 实时、两个持续绑定、批量隐藏、目标缩放与旋转视口、独立显示模式、移除实时人物及中文界面。使用明确 MCP 检查点的 Blender 原生撤销恢复了被删除记录及无主人物网格，目标物体保持完整。所有视角均为非等距透视。这些检查覆盖最终 1.4.0 源码及安装包。
 
 ### 小刻度间距与左侧横线 — 2026-10-29
 

@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.4.0 — Object Attachments and Gray References
+
+- Use neutral-gray shaded figures. Documentation screenshots show Epic's actual UE 5.8.2 Manny; keep source/derived meshes outside Git and the installer.
+
+- Keep independent ruler/figure references beside multiple objects without replacing live selection/mouse following or toggling Freeze.
+- Follow evaluated target movement, scale and height on the current viewport-left side, preserving physical figure height and captured appearance.
+- Add a scene-saved list with batch checkboxes, per-row visibility/removal, show/hide selected and delete-all operations. Target objects are preserved.
+- Retain reference meshes across live replacement/removal; support target rename, missing/hidden targets, Undo and saved-file persistence.
+- Reuse ruler layout/drawing, separate per-entry animation states, and cache batches for multiple reference meshes.
+- Prevent repeated drawing failures from flooding the console; clear the error after a successful frame while other references continue drawing.
+- Retain the 200-check baseline; add 59 object-attachment checks, 8 drawing-error checks and native perspective review.
+
 ## 1.3.0 — Ruler Appearance and Smooth Following
 
 - Add smooth world-space following, physical width offset, optional connectors and zoom-adaptive ticks/units.
@@ -42,6 +54,18 @@
 ---
 
 ## 简体中文
+
+### 1.4.0 — 物体绑定参照与灰色人物
+
+- 人物改为中性灰立体着色，项目示意图使用 Epic UE 5.8.2 的真实 Manny；原始及衍生网格不进入 Git 或安装包。
+
+- 在多个物体旁保留独立尺子/人物，不替代实时选中或鼠标跟随，也不切换 Freeze。
+- 跟随评估后的目标移动、缩放和高度，保持当前视口左侧、独立物理身高与创建时外观。
+- 新增随场景保存的列表，支持勾选多条、逐条显隐/移除、批量显示/隐藏和全部删除；保留所有目标物体。
+- 实时人物替换或移除后保留旧网格，处理目标改名、缺失与隐藏，支持撤销及保存重开。
+- 复用布局和绘制，分离条目缓动状态，缓存多个人物网格的绘制批次。
+- 防止连续绘制异常逐帧刷屏，成功绘制后清除错误，其他参照仍继续显示。
+- 保持原有 200 项检查通过，新增 59 项绑定检查、8 项绘制异常检查与真实透视视口审查。
 
 ### 1.3.0 — 尺子外观与平滑跟随
 

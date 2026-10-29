@@ -17,7 +17,7 @@ from gpu_extras.batch import batch_for_shader
 from mathutils import Vector
 
 from .core import format_number, metric_ticks, metric_units, ruler_detail, visible_line_fraction
-from . import reference, freeze, localization, fonts, placement
+from . import reference, freeze, localization, fonts, placement, attachments
 
 
 _registered = False
@@ -146,10 +146,11 @@ def ruler_layout(context, require_enabled=True):
     return _live_ruler_layout(context, require_enabled)
 
 
-def _live_ruler_layout(context, require_enabled=True):
+def _live_ruler_layout(context, require_enabled=True, settings=None, target=None, cache_key=None):
     """Place a vertical world-space ruler outside a view-independent envelope."""
     region, rv3d = context.region, context.region_data
-    settings = _settings(context.scene)
+    settings = settings or _settings(context.scene)
+    key = cache_key or _view_key(context)
     if (not _needs_display(settings) or (require_enabled and not settings.enabled)
             or not region or not rv3d):
         return None
@@ -162,16 +163,19 @@ def _live_ruler_layout(context, require_enabled=True):
     figure_radius = (math.hypot(max(abs(figure_bounds[0]), abs(figure_bounds[3])),
                                 max(abs(figure_bounds[1]), abs(figure_bounds[4]))) * figure_height
                      if figure_bounds else 0)
-    bounds = selection_bounds(context)
+    bounds = _object_bounds(context, target) if target else selection_bounds(context)
+    if target and not bounds:
+        placement.forget(key)
+        return None
     if bounds:
         low, high = bounds
         span = max(0.0, high[2] - low[2])
         anchor = Vector(((low[0] + high[0]) / 2, (low[1] + high[1]) / 2, low[2]))
         radius = math.hypot(high[0] - low[0], high[1] - low[1]) / 2
         gap = settings.object_gap_metres / scale
-        label = selection_name(context)
-        mode = 'SELECTION'
-        identity = (mode, tuple(sorted(obj.as_pointer() for obj in context.selected_objects)))
+        label = target.name if target else selection_name(context)
+        mode = 'ATTACHMENT' if target else 'SELECTION'
+        identity = (mode, target.as_pointer() if target else tuple(sorted(obj.as_pointer() for obj in context.selected_objects)))
         mouse_position = None
     elif context.selected_objects:
         # Cameras, lights and empty helpers have no measurable surface height.
@@ -180,7 +184,7 @@ def _live_ruler_layout(context, require_enabled=True):
     else:
         hover = _hover.get(context.window.as_pointer())
         if not hover or hover[0] != context.area.as_pointer():
-            placement.forget(_view_key(context))
+            placement.forget(key)
             return None
         mouse = Vector(hover[1])
         anchor = view3d_utils.region_2d_to_location_3d(
@@ -196,16 +200,16 @@ def _live_ruler_layout(context, require_enabled=True):
         mouse_position = tuple(mouse)
     goal = placement.target(anchor, right, span, radius, gap, figure_radius, figure_height,
                             settings.reference_yaw, identity)
-    world = placement.follow(_view_key(context), goal, settings.follow_smoothing)
+    world = placement.follow(key, goal, settings.follow_smoothing)
     points = [_project(region, rv3d, point) for point in world['points']]
     middle = _project(region, rv3d, world['midpoint'])
     if any(point is None for point in points) or middle is None:
-        placement.forget(_view_key(context))
+        placement.forget(key)
         return None
     p0, p1 = points
     extensions = [_project(region, rv3d, point) for point in world['source_points']]
     factor, suffix = _unit(context.scene, settings, span)
-    guide = {'x': p0.x, 'y0': p0.y, 'y1': p1.y, 'span': span,
+    guide = {'cache_key': key, 'x': p0.x, 'y0': p0.y, 'y1': p1.y, 'span': span,
              'height_text': f'{format_number(span * factor)} {suffix}', 'label': label, 'mode': mode,
              'points': [tuple(point) for point in points], 'midpoint': tuple(middle),
              'world_points': [tuple(point) for point in world['points']],
@@ -213,13 +217,13 @@ def _live_ruler_layout(context, require_enabled=True):
              'world_anchor': tuple(world['points'][0]), 'figure_matrix': world['figure_matrix'],
              'attachment_x': p0.x, 'mouse': mouse_position,
              'collapsed': (p1 - p0).length < 2 * ui_scale, 'scale': ui_scale,
-             'extension_world': [tuple(point) for point in world['source_points']] if mode == 'SELECTION' else [],
-             'extensions': [tuple(point) for point in extensions] if mode == 'SELECTION' and all(point is not None for point in extensions) else []}
-    return _decorate_ruler(context, guide)
+             'extension_world': [tuple(point) for point in world['source_points']] if mode != 'REFERENCE' else [],
+             'extensions': [tuple(point) for point in extensions] if mode != 'REFERENCE' and all(point is not None for point in extensions) else []}
+    return _decorate_ruler(context, guide, settings)
 
 
-def _decorate_ruler(context, guide):
-    settings, region, rv3d = _settings(context.scene), context.region, context.region_data
+def _decorate_ruler(context, guide, settings=None):
+    settings, region, rv3d = settings or _settings(context.scene), context.region, context.region_data
     span, scale = guide['span'], _scene_scale(context.scene)
     a, b = (Vector(point) for point in guide['world_points'])
     visible = visible_line_fraction(*guide['points'], region.width, region.height)
@@ -235,7 +239,7 @@ def _decorate_ruler(context, guide):
     sample = [_project(region, rv3d, a.lerp(b, fraction)) for fraction in (centre - delta / 2, centre + delta / 2)]
     density = ((sample[1] - sample[0]).length / max(span * scale * delta, 1e-12)
                if all(point is not None for point in sample) else 0)
-    density = placement.density(_view_key(context), density, settings.follow_smoothing)
+    density = placement.density(guide.get('cache_key', _view_key(context)), density, settings.follow_smoothing)
     guide['detail_alpha'] = ruler_detail(density * span * scale, guide['scale'])
     guide['compact_alpha'] = 1 - guide['detail_alpha']
     weights = metric_units(density)
@@ -346,9 +350,9 @@ def _text(text, x, y, size, color, region, right=True, font_id=0, max_width=None
     blf.draw(font_id, text)
 
 
-def ruler_labels(context, model, unit=None, compact=False):
+def ruler_labels(context, model, unit=None, compact=False, settings=None):
     """Only physical half-height and full-height values, left of their marks."""
-    settings, region = _settings(context.scene), context.region
+    settings, region = settings or _settings(context.scene), context.region
     size = max(9, round(settings.font_size * model['scale']))
     if unit is None and settings.units == 'AUTO' and model.get('metric_units'):
         unit = max(model['metric_units'], key=lambda item: item[1])[0]
@@ -372,24 +376,24 @@ def ruler_labels(context, model, unit=None, compact=False):
     return labels
 
 
-def ruler_name(context, model, compact=False):
+def ruler_name(context, model, compact=False, settings=None):
     if not model.get('label'):
         return None
     point = Vector(model['midpoint'] if compact else model['points'][1])
     if point.y < 0 or point.y > context.region.height:
         return None
     scale = model['scale']
-    size = max(9, round(_settings(context.scene).font_size * scale))
+    size = max(9, round((settings or _settings(context.scene)).font_size * scale))
     small = max(8, round(size * 0.72))
     numeric_y = max(8 + small + 4 * scale, min(point.y - size * 0.35, context.region.height - size - 8))
     return ((point.x - 12 * scale, numeric_y - small - 4 * scale), model['label'], small)
 
 
-def ruler_readout(context, model, unit=None):
+def ruler_readout(context, model, unit=None, settings=None):
     """Move one full-height readout between detailed and compact presentation."""
     detail = model['detail_alpha']
-    normal = ruler_labels(context, model, unit)
-    compact = ruler_labels(context, model, unit, compact=True)
+    normal = ruler_labels(context, model, unit, settings=settings)
+    compact = ruler_labels(context, model, unit, compact=True, settings=settings)
     full_text = compact[0][1] if compact else model['height_text']
     full = next((label for label in normal if label[1] == full_text), None)
     labels = [(point, text, detail) for point, text in normal if text != full_text]
@@ -400,7 +404,7 @@ def ruler_readout(context, model, unit=None):
         labels.append((*full, detail))
     elif compact:
         labels.append((*compact[0], 1 - detail))
-    normal_name, compact_name = ruler_name(context, model), ruler_name(context, model, compact=True)
+    normal_name, compact_name = ruler_name(context, model, settings=settings), ruler_name(context, model, compact=True, settings=settings)
     name = None
     if normal_name and compact_name:
         point = Vector(compact_name[0]).lerp(Vector(normal_name[0]), detail)
@@ -412,25 +416,15 @@ def ruler_readout(context, model, unit=None):
     return labels, name
 
 
-def _draw():
+def _draw_model(context, model, figure, settings=None):
     global _last_error
     try:
-        context = bpy.context
-        if not _registered or context.area.type != 'VIEW_3D':
-            return
-        if not context.space_data.overlay.show_overlays:
-            placement.forget(_view_key(context))
-            return
-        model, figure = display_layout(context)
-        if not model:
-            placement.forget(_view_key(context))
-            return
-        region, settings = context.region, _settings(context.scene)
+        region, settings = context.region, settings or _settings(context.scene)
         detail = model['detail_alpha']
         if figure and (not settings.enabled or detail > 0.001):
-            reference.draw_reference(context, figure, opacity=detail if settings.enabled else 1)
+            reference.draw_reference(context, dict(figure, opacity=settings.reference_opacity),
+                                     opacity=detail if settings.enabled else 1)
         if not settings.enabled:
-            _last_error = ''
             return
         scale = model['scale']
         p0, p1 = (Vector(point) for point in model['points'])
@@ -465,7 +459,7 @@ def _draw():
             # Handoff between units without superimposing different numerals.
             unit, unit_alpha = max(model['metric_units'], key=lambda item: item[1]) if settings.units == 'AUTO' else (None, 1)
             size = max(9, round(settings.font_size * scale))
-            labels, name = ruler_readout(context, model, unit)
+            labels, name = ruler_readout(context, model, unit, settings=settings)
             for (x, y), label, visibility in labels:
                 alpha = unit_alpha * visibility
                 if alpha <= 0.001:
@@ -479,12 +473,32 @@ def _draw():
                       max_width=max(0, min(260 * scale, x - 6)))
         finally:
             gpu.state.blend_set(old_blend)
-        _last_error = ''
     except Exception:
-        error = traceback.format_exc()
-        if error != _last_error:
-            print('[Height Axis] ' + error)
-            _last_error = error
+        _last_error = traceback.format_exc()
+
+
+def _draw():
+    global _last_error
+    context = bpy.context
+    if not _registered or context.area.type != 'VIEW_3D':
+        return
+    if not context.space_data.overlay.show_overlays:
+        placement.forget_view(_view_key(context))
+        return
+    previous_error = _last_error
+    _last_error = ''
+    try:
+        for model, figure, settings in attachments.layouts(context):
+            _draw_model(context, model, figure, settings)
+        model, figure = display_layout(context)
+        if model:
+            _draw_model(context, model, figure)
+        else:
+            placement.forget(_view_key(context))
+    except Exception:
+        _last_error = traceback.format_exc()
+    if _last_error and _last_error != previous_error:
+        print('[Height Axis] ' + _last_error)
 
 
 def _redraw():
@@ -529,8 +543,12 @@ def _service():
     keys = {(window.scene.as_pointer(), window.as_pointer(), area.as_pointer(), region.as_pointer())
             for window in bpy.context.window_manager.windows for area in window.screen.areas
             if area.type == 'VIEW_3D' for region in area.regions if region.type == 'WINDOW'}
+    for key in tuple(keys):
+        scene = next(window.scene for window in bpy.context.window_manager.windows if window.as_pointer() == key[1])
+        keys.update(attachments.cache_key(key, entry) for entry in scene.height_axis_attachments if entry.visible and entry.target)
     placement.retain(keys)
-    if any(_needs_display(_settings(window.scene)) for window in bpy.context.window_manager.windows):
+    if any(_needs_display(_settings(window.scene)) or attachments.has_visible(window.scene)
+           for window in bpy.context.window_manager.windows):
         if placement.animating():
             _redraw()
         return 1 / 60
@@ -840,7 +858,7 @@ class VIEW3D_PT_height_axis_appearance(Panel):
 _CLASSES = (HEIGHTAXIS_Settings, VIEW3D_OT_height_axis_choose_font, VIEW3D_OT_height_axis_default_font,
             VIEW3D_OT_height_axis_load_reference, VIEW3D_OT_height_axis_clear_reference,
             VIEW3D_OT_height_axis_tracker, VIEW3D_PT_height_axis, VIEW3D_PT_height_axis_reference,
-            VIEW3D_PT_height_axis_placement, VIEW3D_PT_height_axis_appearance)
+            VIEW3D_PT_height_axis_placement, VIEW3D_PT_height_axis_appearance, *attachments.CLASSES)
 
 
 def register():
@@ -850,6 +868,7 @@ def register():
     for cls in _CLASSES:
         bpy.utils.register_class(cls)
     bpy.types.Scene.height_axis = PointerProperty(type=HEIGHTAXIS_Settings)
+    attachments.register_properties()
     localization.register()
     _registered = True
     if not bpy.app.background:
@@ -884,6 +903,7 @@ def unregister():
             handlers.remove(callback)
     if hasattr(bpy.types.Scene, 'height_axis'):
         del bpy.types.Scene.height_axis
+    attachments.unregister_properties()
     for cls in reversed(_CLASSES):
         bpy.utils.unregister_class(cls)
     localization.unregister()

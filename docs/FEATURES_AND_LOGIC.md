@@ -54,9 +54,11 @@ Appearance settings save with each scene. Local TTF, OTF and TTC fonts are loade
 
 ## Reference loading
 
+Local 1.4.0 also supports [object attachments](OBJECT_ATTACHMENTS.md). Each scene stores independent object pointers, display choices and appearance snapshots, with retained immutable reference mesh IDs. Entries reuse the live layout/drawing path with their own animation/density keys. Live Freeze and mouse tracking remain independent. Target geometry is evaluated again as it changes; hidden or missing targets are skipped. Removal acts on records and unowned normalized reference meshes, never on target objects.
+
 Import occurs in a temporary scene. The evaluated visible surfaces are combined, optional axis correction is applied, large references are simplified, and the result is normalized to unit height. The normalized display mesh is retained as scene data; the temporary objects, rigs, materials and import data are removed. The original scene selection and active object are restored.
 
-The viewport draws this reference with its own depth buffer and a blue shaded style. It has no selectable scene object and does not appear in a render. Native format importers are used for Blend, FBX, OBJ, glTF/GLB and STL.
+The viewport draws this reference with its own depth buffer and a neutral-gray shaded style. It has no selectable scene object and does not appear in a render. Native format importers are used for Blend, FBX, OBJ, glTF/GLB and STL.
 
 ## Interaction rules
 
@@ -94,8 +96,10 @@ The viewport draws this reference with its own depth buffer and a blue shaded st
 
 ### 人物加载与交互
 
+本地 1.4.0 还支持[物体绑定参照](OBJECT_ATTACHMENTS.md)。每个场景保存独立目标指针、显示选择与外观快照，通过 ID 引用保留不可变的人物网格。条目复用实时布局和绘制，拥有独立的缓动及投影密度缓存；实时 Freeze 与鼠标追踪保持独立。目标变化时重新评估几何，隐藏或缺失时跳过。删除只处理记录和不再被引用的归一化人物网格，绝不操作目标物体。
+
 使用临时场景导入并评估可见表面，合并几何体，按需修正向上轴、简化大型模型，再归一化为单位高度。只保留显示用的参考网格数据，清理临时对象、骨架、材质等导入数据，并恢复原场景的选择和活动对象。
 
-人物使用独立深度缓冲绘制蓝色立体参照，不产生可选中的场景物体，也不进入最终渲染。支持 Blend、FBX、OBJ、glTF/GLB、STL 原生导入器。
+人物使用独立深度缓冲绘制中性灰立体参照，不产生可选中的场景物体，也不进入最终渲染。支持 Blend、FBX、OBJ、glTF/GLB、STL 原生导入器。
 
 原生选择、导航及变换继续接收正常事件，不新增快捷键。冻结停止鼠标追踪但保留绘制。模型加载和移除支持撤销，撤销/重做后清理绘制缓存。禁用扩展时清理处理器、计时器、绘制回调、注册类和 GPU 资源；已保存场景中的参照数据可在以后继续使用。

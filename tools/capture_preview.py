@@ -51,7 +51,8 @@ bpy.context.view_layer.objects.active = target
 scene.height_axis.enabled = True
 scene.height_axis.left_offset = 52
 scene.height_axis.font_size = 15
-bpy.ops.view3d.height_axis_load_reference(filepath=str(ROOT / 'tests' / 'fixtures' / 'mannequin.blend'))
+REFERENCE_MODEL = Path(os.environ.get('HEIGHT_AXIS_REFERENCE_MODEL', ROOT / 'tests' / 'fixtures' / 'mannequin.blend'))
+bpy.ops.view3d.height_axis_load_reference(filepath=str(REFERENCE_MODEL))
 
 window = bpy.context.window
 area = next(area for area in window.screen.areas if area.type == 'VIEW_3D')

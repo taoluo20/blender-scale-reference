@@ -4,6 +4,8 @@ A viewport height ruler and reference figure that stay on the **view-left side**
 
 **English** · [简体中文](#简体中文)
 
+Version **1.4.0** adds persistent object attachments and a batch visibility list while preserving live following and Freeze. Reference figures use neutral-gray shading. See [object attachments](docs/OBJECT_ATTACHMENTS.md) for the new workflow.
+
 Version **1.3.0** adds a translucent white ruler, adjustable minor tick spacing, left-only crossbars, appearance controls, smooth world-space following and zoom-adaptive detail. Unit and detail transitions keep one readable measurement, and sidebar controls are grouped by purpose.
 
 ![Height Axis in Blender: selection height, a human reference and the Scale sidebar](docs/images/selected.png)
@@ -20,9 +22,11 @@ Version **1.3.0** adds a translucent white ruler, adjustable minor tick spacing,
 
 The reference figure keeps its configured physical height, so a 1.8 m person can be compared with a 3.2 m object. It is not stretched to match the target.
 
+Use **Object Attachments → Attach to Object** to retain a reference beside the active object. Select another object to continue using the independent live guide. The scene-saved list supports batch show/hide and removal while preserving target objects.
+
 ## Install and use
 
-1. Download `height-axis-1.3.0.zip` from the [1.3.0 release](https://github.com/taoluo20/blender-height-axis/releases/tag/v1.3.0).
+1. Download `height-axis-1.4.0.zip` from the [1.4.0 release](https://github.com/taoluo20/blender-height-axis/releases/tag/v1.4.0).
 2. In Blender, open **Edit → Preferences → Get Extensions → menu → Install from Disk**, select the ZIP, and enable **Height Axis**.
 3. In the 3D Viewport press **N**, open **Scale**, and enable **Show Height Axis**.
 
@@ -43,20 +47,20 @@ The interface uses English source labels and includes Simplified Chinese transla
 - Independent line/text colors and alpha, line width, font size and local font selection, all editable while frozen.
 - Smooth world-space following, optional connection lines, and a physical offset outside the selection's horizontal envelope. Negative offsets move the guides inward.
 - Adjustable, sparse-by-default decimal tick levels down to 1 mm and automatic m / cm / mm units as you zoom. Distant or top views retain one height readout and a smaller object name. Transitions draw each reading once.
-- A shaded blue reference figure, independent from the scene's selectable objects and final render.
+- A shaded neutral-gray reference figure, independent from the scene's selectable objects and final render.
 - Model import with replacement, failure recovery, reference-only display and saved-file persistence.
 - World-space Freeze for both selection and mouse placement.
 - No added hotkeys or network service dependency.
 
 ## Compatibility and limits
 
-The manifest declares **Blender 4.5+**. The final 1.3.0 build passed **200 checks on Blender 5.2.2 LTS**, including installation and native perspective viewport review. Earlier baseline checks also ran on 5.1.2; the final tick-spacing update was not rerun there. See [validation details](docs/VALIDATION.md).
+The manifest declares **Blender 4.5+**. The final 1.4.0 build passed **267 checks on Blender 5.2.2 LTS**, with isolated ZIP installation and native perspective viewport review. Earlier baseline checks also ran on 5.1.2; this update was not rerun on 4.5 or 5.1. See [validation details](docs/VALIDATION.md).
 
 - Height follows **world Z**, not an object's local axis. In Edit Mode the editable mesh is measured before final modifiers.
 - Unrealized instances are not included in the selection height. Realize or convert them first when needed.
 - Mouse placement uses a view-depth plane through the 3D Cursor; it does not automatically snap to the surface under the pointer.
 - Near a top/bottom view, the projected Z ruler collapses to a height readout and object name. The numbers remain physical heights.
-- Reference models use a single blue shaded style, with no source textures or animation playback. Hidden/non-rendering meshes and bone widgets are excluded. Large references are simplified to a display budget of about 150,000 triangles.
+- Reference models use a single neutral-gray shaded style, with no source textures or animation playback. Hidden/non-rendering meshes and bone widgets are excluded. Large references are simplified to a display budget of about 150,000 triangles.
 - Import requires Object Mode. Loading a new model successfully resumes following; removing a figure leaves a frozen ruler in place.
 - Guides can be clipped at viewport edges. Frozen positions naturally change screen projection when the camera moves.
 
@@ -65,16 +69,19 @@ The manifest declares **Blender 4.5+**. The final 1.3.0 build passed **200 check
 The repository keeps the extension in `height_axis/`, public guides and previews in `docs/`, portable checks in `tests/`, and build tools in `tools/`. Generated installers are distributed through Releases.
 
 - [Visual guide](docs/VISUAL_GUIDE.md): controls, colors and examples.
+- [Object attachments](docs/OBJECT_ATTACHMENTS.md): binding and batch-list behavior.
 - [Visual review](docs/VISUAL_REVIEW.md): findings, adjustments and exercised viewport states.
 - [Features and logic](docs/FEATURES_AND_LOGIC.md): state transitions, measurement rules and persistence.
 - [Development](docs/DEVELOPMENT.md): reproducible packages and isolated Blender checks.
 - [Changelog](CHANGELOG.md) · [License](LICENSE): GPL-3.0-or-later.
 
-The preview mannequin is generated by this project's tests. No third-party character asset is bundled.
+Project screenshots show Epic's UE 5.8.2 Manny in neutral gray. [Source and license](docs/UE_MANNEQUIN.md) · [Third-party notice](THIRD_PARTY_NOTICES.md). The demonstration model is not included; load your own reference figure. Automated tests use this project's self-authored mannequin. No third-party character geometry is bundled.
 
 ---
 
 ## 简体中文
+
+**1.4.0** 新增持续绑定物体的参照与批量显隐列表，实时跟随和 Freeze 继续独立运行，参考人物改为中性灰立体着色。新用法见[物体绑定说明](docs/OBJECT_ATTACHMENTS.md)。
 
 Height Axis 是 Blender 的视口高度尺与参考人物工具。参照始终位于选中物体或鼠标点的**当前视口左侧**，也可以冻结在需要保留的三维位置。
 
@@ -90,9 +97,11 @@ Height Axis 是 Blender 的视口高度尺与参考人物工具。参照始终�
 
 参考人物始终使用设置的真实身高，例如用 1.8 米人物对比 3.2 米物体，不会自动拉伸成目标物体的高度。
 
+在**物体绑定参照 → 绑定到物体**保留活动物体旁的参照后，可继续选择其他物体使用独立的实时参照。列表随场景保存，支持批量显隐及移除；不会删除目标物体。
+
 ### 安装与使用
 
-1. 从 [1.3.0 发布页](https://github.com/taoluo20/blender-height-axis/releases/tag/v1.3.0)下载 `height-axis-1.3.0.zip`。
+1. 从 [1.4.0 发布页](https://github.com/taoluo20/blender-height-axis/releases/tag/v1.4.0)下载 `height-axis-1.4.0.zip`。
 2. 在 Blender 打开 **Edit → Preferences → Get Extensions → 右上角菜单 → Install from Disk**，选择 ZIP 并启用 Height Axis。
 3. 3D 视口按 **N**，打开 **Scale** 页签，勾选 **Show Height Axis / 显示高度轴**。
 
@@ -106,13 +115,13 @@ Height Axis 是 Blender 的视口高度尺与参考人物工具。参照始终�
 
 ### 功能与边界
 
-支持变换和网格修改器后的实时高度、多选整体高度、编辑网格、自动刻度、场景单位及 m / cm / mm / ft / in。参考人物采用蓝色立体参照显示，可替换、独立开关并随文件保存，不注册额外快捷键，不依赖网络服务。
+支持变换和网格修改器后的实时高度、多选整体高度、编辑网格、自动刻度、场景单位及 m / cm / mm / ft / in。参考人物采用中性灰立体参照显示，可替换、独立开关并随文件保存，不注册额外快捷键，不依赖网络服务。
 
 尺子和文字默认为白色半透明，数值只保留半高与全高，均在左侧；去掉底部说明。全部横向刻度只从竖线向屏幕左侧延伸，比主线更细。线宽、小刻度疏密、线色、字色、透明度、字号和字体在冻结状态下仍可调整。
 
 跟随在世界空间平滑变化，宽度偏移默认位于选中范围的水平包围之外，负值可向内靠近；连接线默认关闭。缩放时逐层显示十进制刻度，最细到 1 mm，自动单位在 m / cm / mm 之间变化。远景及俯视收为一个高度数值和较小的物体名称；过渡期间每套读数只绘制一次。
 
-清单声明 Blender 4.5+；最终 1.3.0 在 **Blender 5.2.2 LTS 通过 200 项检查**，并验证安装及实际透视视口。较早的基础检查也覆盖 5.1.2，但最终小刻度更新没有在该版本重跑。详见[验证记录](docs/VALIDATION.md)。
+清单声明 Blender 4.5+；最终 1.4.0 在 **Blender 5.2.2 LTS 通过 267 项检查**，并验证隔离配置内安装及实际透视视口。较早的基础检查也覆盖 5.1.2；本次更新没有在 4.5 或 5.1 重跑。详见[验证记录](docs/VALIDATION.md)。
 
 - 高度按世界 Z 轴测量。编辑模式读取修改器之前的当前编辑网格。
 - 未实体化实例不计入选中高度，需要时先 Realize Instances 或转换为实际几何体。
@@ -122,6 +131,6 @@ Height Axis 是 Blender 的视口高度尺与参考人物工具。参照始终�
 - 加载需要对象模式。成功加载新模型会恢复跟随；移除人物时，冻结的尺子仍保留原位置。
 - 视口边缘可能裁切参照；冻结后的参照会随相机移动自然改变屏幕投影。
 
-更多内容：[视觉指南](docs/VISUAL_GUIDE.md)、[视觉审查](docs/VISUAL_REVIEW.md)、[功能与逻辑](docs/FEATURES_AND_LOGIC.md)、[构建与测试](docs/DEVELOPMENT.md)、[更新记录](CHANGELOG.md)。许可证为 GPL-3.0-or-later。预览人物由本项目测试脚本生成，没有打包第三方人物资产。
+更多内容：[视觉指南](docs/VISUAL_GUIDE.md)、[视觉审查](docs/VISUAL_REVIEW.md)、[功能与逻辑](docs/FEATURES_AND_LOGIC.md)、[构建与测试](docs/DEVELOPMENT.md)、[更新记录](CHANGELOG.md)。插件代码许可证为 GPL-3.0-or-later。项目示意图使用 Epic UE 5.8.2 的灰色 Manny，详见[来源与许可](docs/UE_MANNEQUIN.md)及[第三方说明](THIRD_PARTY_NOTICES.md)。示例模型不随插件提供，请加载自己的参考模型。自动检查仍用本项目自制人物，没有打包第三方人物网格。
 
 项目结构：`height_axis/` 为扩展源码，`docs/` 为公开指南与预览，`tests/` 为可移植检查，`tools/` 为构建脚本。生成的安装包通过 Releases 分发。
