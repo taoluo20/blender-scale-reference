@@ -53,6 +53,7 @@ scene.height_axis.left_offset = 52
 scene.height_axis.font_size = 15
 REFERENCE_MODEL = Path(os.environ.get('HEIGHT_AXIS_REFERENCE_MODEL', ROOT / 'tests' / 'fixtures' / 'mannequin.blend'))
 bpy.ops.view3d.height_axis_load_reference(filepath=str(REFERENCE_MODEL))
+scene.height_axis.show_reference = False
 
 window = bpy.context.window
 area = next(area for area in window.screen.areas if area.type == 'VIEW_3D')
@@ -80,10 +81,12 @@ def setup():
 def screenshot(name):
     with bpy.context.temp_override(window=window, area=area, region=region):
         guide, figure = addon.display_layout(bpy.context)
-        assert guide and figure and not addon._last_error, addon._last_error
+        assert guide and not addon._last_error, addon._last_error
         bpy.ops.screen.screenshot_area(filepath=str(OUTPUT / name), hide_props_region=False)
         evidence.append({'file': name, 'state': 'frozen' if scene.height_axis.frozen else guide['mode'].lower(),
-                         'world_height': guide['span'], 'reference_height': figure['height'],
+                         'world_height': guide['span'], 'reference_height': figure['height'] if figure else None,
+                         'only_with_selection': scene.height_axis.only_with_selection,
+                         'show_half_height': scene.height_axis.show_half_height,
                          'labels': addon.ruler_labels(bpy.context, guide),
                          'midpoint': list(guide['midpoint']),
                          'line_color': list(scene.height_axis.line_color),
@@ -96,6 +99,7 @@ def screenshot(name):
 
 
 def mouse():
+    scene.height_axis.only_with_selection = False
     target.select_set(False)
     bpy.context.view_layer.objects.active = None
     addon._hover[window.as_pointer()] = (area.as_pointer(), (region.width * 0.42, region.height * 0.53))

@@ -4,11 +4,13 @@ A viewport height ruler and reference figure that stay on the **view-left side**
 
 **English** · [简体中文](#简体中文)
 
+Version **1.5.0** defaults to **Only With Selection**, no reference figure and no half-height value. Enable **Show Height Axis** and select geometry to measure it. Following now uses a subtle **0.02 s** response; minor tick spacing remains **24 px**. Mouse following and the midpoint value are optional checkboxes, and existing Freeze placements and object attachments remain available.
+
 Version **1.4.0** adds persistent object attachments and a batch visibility list while preserving live following and Freeze. Reference figures use neutral-gray shading. See [object attachments](docs/OBJECT_ATTACHMENTS.md) for the new workflow.
 
 Version **1.3.0** adds a translucent white ruler, adjustable minor tick spacing, left-only crossbars, appearance controls, smooth world-space following and zoom-adaptive detail. Unit and detail transitions keep one readable measurement, and sidebar controls are grouped by purpose.
 
-![Height Axis in Blender: selection height, a human reference and the Scale sidebar](docs/images/selected.png)
+![Height Axis in Blender: selection height and the Scale sidebar](docs/images/selected.png)
 
 [Download the latest release](https://github.com/taoluo20/blender-height-axis/releases/latest) · [Visual guide](docs/VISUAL_GUIDE.md) · [Features and behavior](docs/FEATURES_AND_LOGIC.md) · [Build and test](docs/DEVELOPMENT.md)
 
@@ -17,7 +19,7 @@ Version **1.3.0** adds a translucent white ruler, adjustable minor tick spacing,
 | State | Ruler and figure behavior |
 | --- | --- |
 | **Selection** | Measure the visible selected geometry's world-Z height. Keep the guides to its screen-left as you orbit the viewport. Multi-selection measures the combined height. |
-| **Mouse** | With nothing selected, follow the mouse on the left. The reference height defaults to **1.8 m**. |
+| **Mouse** | Uncheck **Only With Selection** to follow the mouse on the left when nothing is selected. The reference height defaults to **1.8 m**; no object or model name is displayed. |
 | **Frozen** | Pin the displayed ruler and figure in **world space**. Mouse movement, selection changes and viewport orbit no longer reposition them. Uncheck **Freeze** to resume following. |
 
 The reference figure keeps its configured physical height, so a 1.8 m person can be compared with a 3.2 m object. It is not stretched to match the target.
@@ -26,24 +28,24 @@ Use **Object Attachments → Attach to Object** to retain a reference beside the
 
 ## Install and use
 
-1. Download `height-axis-1.4.0.zip` from the [1.4.0 release](https://github.com/taoluo20/blender-height-axis/releases/tag/v1.4.0).
+1. Download `height-axis-1.5.0.zip` from the [1.5.0 release](https://github.com/taoluo20/blender-height-axis/releases/tag/v1.5.0).
 2. In Blender, open **Edit → Preferences → Get Extensions → menu → Install from Disk**, select the ZIP, and enable **Height Axis**.
-3. In the 3D Viewport press **N**, open **Scale**, and enable **Show Height Axis**.
+3. In the 3D Viewport press **N**, open **Scale**, enable **Show Height Axis**, and select geometry.
 
 Use **Load Reference Figure** to choose a `.blend`, `.fbx`, `.obj`, `.gltf`, `.glb` or `.stl` model. Adjust **Reference Height (m)**, **Figure Rotation** and **Figure Opacity**. The figure has its own display checkbox.
 
 Enable **Freeze** to preserve the current placement. In mouse mode you can move into the sidebar to click it: the last visible viewport placement is retained. Placement and reference data save with the `.blend` file.
 
-The main panel contains visibility, Freeze, reference height and units. **Reference Figure** contains model loading and figure controls. Expand **Placement & Follow** for the physical width offset, mouse gap, follow smoothing and optional connection lines. Expand **Ruler Appearance** to change font size, line width, minor tick spacing, overall opacity, line RGBA and text RGBA. **Tick Spacing (px)** defaults to 24: increase it for fewer minor ticks, or decrease it for more. It remains editable while frozen and saves with the scene. **Choose Font File** accepts local TTF, OTF and TTC files; the reset icon restores Blender's default font. Font files stay external: if a saved path is unavailable, labels use the default font and the panel shows a warning.
+The main panel contains visibility, selection-only display, Freeze, reference height and units. **Reference Figure** contains model loading and figure controls. Expand **Placement & Follow** for the physical width offset, mouse gap, subtle 0.02 s default follow smoothing and optional connection lines. Expand **Ruler Appearance** to change font size, line width, minor tick spacing, **Show Half-Height Value**, overall opacity, line RGBA and text RGBA. **Tick Spacing (px)** remains 24: increase it for fewer minor ticks, or decrease it for more. The midpoint-value checkbox changes text only; all crossbars and minor ticks remain. These appearance settings stay editable while frozen and save with the scene. **Choose Font File** accepts local TTF, OTF and TTC files; the reset icon restores Blender's default font. Font files stay external: if a saved path is unavailable, labels use the default font and the panel shows a warning.
 
-The interface uses English source labels and includes Simplified Chinese translations through Blender's language settings. Display and Freeze are off by default. Hiding viewport Overlays hides the guides.
+The interface uses English source labels and includes Simplified Chinese translations through Blender's language settings. Display, Freeze, reference figures and half-height values start off; **Only With Selection** starts on. Selection-only filtering controls the live guide and preserves explicitly frozen guides and stored object attachments. Hiding viewport Overlays hides all guides.
 
 ## What is included
 
 - Live evaluated geometry bounds, including object transforms and mesh modifiers.
 - World-Z height for combined selections; live edit-mesh bounds in Edit Mode.
 - Adaptive ruler ticks and scene units, or explicit m / cm / mm / ft / in.
-- Translucent white lines and text by default, with only half-height and full-height values on the left. The bottom caption is removed; all crossbars extend only left from the axis and stay thinner than the main line.
+- Translucent white lines and text by default, with the full-height value on the left and an optional half-height value. The bottom caption is removed; all crossbars extend only left from the axis and stay thinner than the main line.
 - Independent line/text colors and alpha, line width, font size and local font selection, all editable while frozen.
 - Smooth world-space following, optional connection lines, and a physical offset outside the selection's horizontal envelope. Negative offsets move the guides inward.
 - Adjustable, sparse-by-default decimal tick levels down to 1 mm and automatic m / cm / mm units as you zoom. Distant or top views retain one height readout and a smaller object name. Transitions draw each reading once.
@@ -54,7 +56,7 @@ The interface uses English source labels and includes Simplified Chinese transla
 
 ## Compatibility and limits
 
-The manifest declares **Blender 4.5+**. The final 1.4.0 build passed **267 checks on Blender 5.2.2 LTS**, with isolated ZIP installation and native perspective viewport review. Earlier baseline checks also ran on 5.1.2; this update was not rerun on 4.5 or 5.1. See [validation details](docs/VALIDATION.md).
+The manifest declares **Blender 4.5+**. Version 1.5.0 passed **297 checks on Blender 5.2.2 LTS**, including actual font loading and old attachment/Freeze compatibility. Its final ZIP passed isolated installation, new-default and attachment checks. Eight native perspective states produced ten updated public screenshots, including the English and Chinese controls. Earlier baseline checks ran on 5.1.2; this update was not rerun on 4.5 or 5.1. See [validation details](docs/VALIDATION.md).
 
 - Height follows **world Z**, not an object's local axis. In Edit Mode the editable mesh is measured before final modifiers.
 - Unrealized instances are not included in the selection height. Realize or convert them first when needed.
@@ -75,11 +77,13 @@ The repository keeps the extension in `height_axis/`, public guides and previews
 - [Development](docs/DEVELOPMENT.md): reproducible packages and isolated Blender checks.
 - [Changelog](CHANGELOG.md) · [License](LICENSE): GPL-3.0-or-later.
 
-Project screenshots show Epic's UE 5.8.2 Manny in neutral gray. [Source and license](docs/UE_MANNEQUIN.md) · [Third-party notice](THIRD_PARTY_NOTICES.md). The demonstration model is not included; load your own reference figure. Automated tests use this project's self-authored mannequin. No third-party character geometry is bundled.
+Optional figure examples show Epic's UE 5.8.2 Manny in neutral gray; the default preview contains no figure. [Source and license](docs/UE_MANNEQUIN.md) · [Third-party notice](THIRD_PARTY_NOTICES.md). The demonstration model is not included; load your own reference figure. Automated tests use this project's self-authored mannequin. No third-party character geometry is bundled.
 
 ---
 
 ## 简体中文
+
+**1.5.0** 默认开启**仅选中时显示**、关闭参考人物和半高数值。勾选**显示高度轴**并选择几何体即可测量；跟随缓动默认改为轻微的 **0.02 秒**，小刻度间距保持 **24 px**。鼠标跟随与半高文字可通过开关恢复，已有冻结和物体绑定继续保留。
 
 **1.4.0** 新增持续绑定物体的参照与批量显隐列表，实时跟随和 Freeze 继续独立运行，参考人物改为中性灰立体着色。新用法见[物体绑定说明](docs/OBJECT_ATTACHMENTS.md)。
 
@@ -92,7 +96,7 @@ Height Axis 是 Blender 的视口高度尺与参考人物工具。参照始终�
 | 状态 | 尺子与人物的行为 |
 | --- | --- |
 | **选中物体** | 测量可见选中几何体的世界 Z 高度；旋转视口时仍位于其屏幕左侧。多选计算整体高度。 |
-| **鼠标跟随** | 未选中物体时，在鼠标左侧跟随。默认参考高度为 **1.8 米**。 |
+| **鼠标跟随** | 取消**仅选中时显示**后，未选中物体时在鼠标左侧跟随。默认参考高度为 **1.8 米**，不显示物体名或模型文件名。 |
 | **冻结** | 将当时显示的尺子和人物固定在**世界三维位置**。移动鼠标、改变选择及旋转视口都不会重新放置它们；取消勾选 Freeze 后恢复跟随。 |
 
 参考人物始终使用设置的真实身高，例如用 1.8 米人物对比 3.2 米物体，不会自动拉伸成目标物体的高度。
@@ -101,9 +105,9 @@ Height Axis 是 Blender 的视口高度尺与参考人物工具。参照始终�
 
 ### 安装与使用
 
-1. 从 [1.4.0 发布页](https://github.com/taoluo20/blender-height-axis/releases/tag/v1.4.0)下载 `height-axis-1.4.0.zip`。
+1. 从 [1.5.0 发布页](https://github.com/taoluo20/blender-height-axis/releases/tag/v1.5.0)下载 `height-axis-1.5.0.zip`。
 2. 在 Blender 打开 **Edit → Preferences → Get Extensions → 右上角菜单 → Install from Disk**，选择 ZIP 并启用 Height Axis。
-3. 3D 视口按 **N**，打开 **Scale** 页签，勾选 **Show Height Axis / 显示高度轴**。
+3. 3D 视口按 **N**，打开 **Scale** 页签，勾选 **Show Height Axis / 显示高度轴**并选择几何物体。
 
 点击 **Load Reference Figure / 加载参考人物**，选择 Blend、FBX、OBJ、glTF/GLB 或 STL 文件。可调整参考身高、人物朝向和不透明度；人物有独立显示开关。
 
@@ -111,17 +115,17 @@ Height Axis 是 Blender 的视口高度尺与参考人物工具。参照始终�
 
 主面板保留显示、冻结、参考身高和单位；**Reference Figure / 参考人物**收纳模型加载及人物设置。展开 **Placement & Follow / 放置与跟随**可调实际宽度偏移、鼠标间距、跟随缓动和连接线。展开 **Ruler Appearance / 尺子外观**可调字号、线粗细、小刻度间距、整体不透明度、线与文字各自的颜色及透明度。**小刻度间距 (px)** 默认 24，数值越大越稀疏、越小越密；冻结后仍可调节，并随场景保存。**选择字体文件**支持本地 TTF、OTF、TTC，重置图标恢复默认字体。字体文件保留在外部；保存的路径不可用时回退到 Blender 默认字体，并在侧栏提示。
 
-界面以英文为源语言，包含随 Blender 语言设置使用的简体中文翻译。默认关闭显示与冻结；关闭视口 Overlays 时参照也会隐藏。
+界面以英文为源语言，包含随 Blender 语言设置使用的简体中文翻译。默认关闭显示、冻结、人物和半高文字，开启**仅选中时显示**；此开关只过滤实时参照，不会移除显式冻结或已保存的物体绑定。跟随缓动默认 0.02 秒。关闭视口 Overlays 时全部参照隐藏。
 
 ### 功能与边界
 
 支持变换和网格修改器后的实时高度、多选整体高度、编辑网格、自动刻度、场景单位及 m / cm / mm / ft / in。参考人物采用中性灰立体参照显示，可替换、独立开关并随文件保存，不注册额外快捷键，不依赖网络服务。
 
-尺子和文字默认为白色半透明，数值只保留半高与全高，均在左侧；去掉底部说明。全部横向刻度只从竖线向屏幕左侧延伸，比主线更细。线宽、小刻度疏密、线色、字色、透明度、字号和字体在冻结状态下仍可调整。
+尺子和文字默认为白色半透明，默认只显示左侧全高数值；**尺子外观 → 显示半高数值**可恢复中位文字，不改变中点横条或小刻度密度。全部横向刻度只从竖线向屏幕左侧延伸，比主线更细。线宽、小刻度疏密、半高开关、线色、字色、透明度、字号和字体在冻结状态下仍可调整。
 
 跟随在世界空间平滑变化，宽度偏移默认位于选中范围的水平包围之外，负值可向内靠近；连接线默认关闭。缩放时逐层显示十进制刻度，最细到 1 mm，自动单位在 m / cm / mm 之间变化。远景及俯视收为一个高度数值和较小的物体名称；过渡期间每套读数只绘制一次。
 
-清单声明 Blender 4.5+；最终 1.4.0 在 **Blender 5.2.2 LTS 通过 267 项检查**，并验证隔离配置内安装及实际透视视口。较早的基础检查也覆盖 5.1.2；本次更新没有在 4.5 或 5.1 重跑。详见[验证记录](docs/VALIDATION.md)。
+清单声明 Blender 4.5+；1.5.0 在 **Blender 5.2.2 LTS 通过 297 项检查**，包含实际字体加载与旧绑定/冻结兼容。最终 ZIP 已验证隔离安装、新默认值及绑定操作；8 种原生透视状态生成了 10 张更新后的公开截图，包含中英文控件。较早的基础检查覆盖 5.1.2；本次没有在 4.5 或 5.1 重跑。详见[验证记录](docs/VALIDATION.md)。
 
 - 高度按世界 Z 轴测量。编辑模式读取修改器之前的当前编辑网格。
 - 未实体化实例不计入选中高度，需要时先 Realize Instances 或转换为实际几何体。

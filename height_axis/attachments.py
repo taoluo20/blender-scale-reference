@@ -15,7 +15,7 @@ from bpy.types import Operator, Panel, PropertyGroup, UIList
 STYLE_FIELDS = ('enabled', 'show_reference', 'reference_metres', 'reference_name', 'reference_yaw',
                 'reference_opacity', 'object_gap_metres', 'left_offset', 'follow_smoothing',
                 'show_extensions', 'font_size', 'line_width', 'tick_spacing', 'opacity',
-                'line_color', 'text_color', 'font_path', 'units')
+                'line_color', 'text_color', 'font_path', 'units', 'show_half_height')
 GEOMETRY_TYPES = {'MESH', 'CURVE', 'SURFACE', 'FONT', 'META', 'VOLUME'}
 
 
@@ -33,8 +33,12 @@ def _changed(self, context):
 def config_data(raw):
     try:
         data = json.loads(raw)
-        if data.get('version') == 1 and all(name in data['style'] for name in STYLE_FIELDS):
-            return data['style']
+        if data.get('version') == 1:
+            # 1.4.0 attachments always displayed the half-height label.
+            saved = dict(data['style'])
+            saved.setdefault('show_half_height', True)
+            if all(name in saved for name in STYLE_FIELDS):
+                return saved
     except (ValueError, TypeError, KeyError, AttributeError):
         pass
     return None

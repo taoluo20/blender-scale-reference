@@ -41,6 +41,8 @@ check('follow has a nonzero default response', settings.follow_smoothing > 0)
 check('separate ruler opacity is available', close(settings.opacity, 1))
 check('minor ticks default to a sparser 24 pixel fade threshold', close(settings.tick_spacing, 24))
 check('width offset defaults outside the widest extent', settings.object_gap_metres > 0)
+settings.only_with_selection = False
+settings.show_half_height = True
 language = bpy.context.preferences.view.language
 bpy.context.preferences.view.language = 'zh_HANS'
 check('placement section uses the extension translation',

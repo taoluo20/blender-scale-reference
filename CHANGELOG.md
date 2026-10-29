@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.5.0 - Selection Defaults and Responsive Following
+
+- Add **Only With Selection**, enabled by default, to hide live guides without selected measurable geometry. Keep existing Freeze placements and object attachments.
+- Omit object/model captions from mouse-mode guides, including legacy frozen mouse snapshots.
+- Reduce default follow smoothing to 0.02 s for slight easing; retain the 24 px minor tick spacing.
+- Add **Show Half-Height Value**, disabled by default, without changing midpoint crossbars or minor ticks. Keep it editable while frozen.
+- Capture the new text setting per attachment; preserve the historical visible midpoint for 1.4.0 attachment records without the new field.
+- Keep reference figures opt-in and save the new checkbox settings with the scene.
+
 ## 1.4.0 — Object Attachments and Gray References
 
 - Use neutral-gray shaded figures. Documentation screenshots show Epic's actual UE 5.8.2 Manny; keep source/derived meshes outside Git and the installer.
@@ -54,6 +63,15 @@
 ---
 
 ## 简体中文
+
+### 1.5.0 - 选中显示默认值与轻微跟随
+
+- 新增默认开启的**仅选中时显示**，未选中可测量几何体时隐藏实时参照；已有冻结和物体绑定保留。
+- 鼠标模式不再显示物体或模型名称，兼容旧版鼠标冻结快照。
+- 跟随缓动默认降至 0.02 秒，保留轻微平滑；小刻度间距仍为 24 px。
+- 新增默认关闭的**显示半高数值**，不改变中点横条或小刻度；冻结后仍可调整。
+- 绑定条目保存新增半高设置；缺少该字段的 1.4.0 记录按旧行为显示中位文字。
+- 参考人物仍需主动加载启用，新增开关随场景保存。
 
 ### 1.4.0 — 物体绑定参照与灰色人物
 

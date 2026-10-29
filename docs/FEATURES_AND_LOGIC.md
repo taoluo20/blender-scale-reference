@@ -8,33 +8,36 @@
 stateDiagram-v2
     [*] --> Hidden
     Hidden --> Selection: Enable an unfrozen guide with geometry selected
-    Hidden --> Mouse: Enable an unfrozen guide with no selection
+    Hidden --> Mouse: Enable a guide with no selection and selection-only off
     Hidden --> Frozen: Show a guide with a retained Freeze
-    Selection --> Mouse: Deselect geometry
+    Selection --> Mouse: Deselect with selection-only off
+    Selection --> Hidden: Deselect with selection-only on
+    Mouse --> Hidden: Enable selection-only
     Mouse --> Selection: Select geometry
     Selection --> Frozen: Check Freeze
     Mouse --> Frozen: Check Freeze
     Frozen --> Selection: Uncheck Freeze with a selection
-    Frozen --> Mouse: Uncheck Freeze without a selection
+    Frozen --> Mouse: Uncheck Freeze without selection and selection-only off
+    Frozen --> Hidden: Uncheck Freeze without selection and selection-only on
     Selection --> Hidden: Disable both guides
     Mouse --> Hidden: Disable both guides
     Frozen --> Hidden: Disable both guides; keep placement
 ```
 
-The display checkboxes and placement are independent. Hiding both guides can retain a frozen placement; showing a guide again restores that placement. A viewport with no previous visible guide cannot create a meaningful Freeze and displays a hint instead.
+The display checkboxes and placement are independent. **Only With Selection** defaults on and filters live guides unless visible measurable geometry is selected. Explicit Freeze placements and stored object attachments are unaffected. Hiding both guides can retain a frozen placement; showing a guide again restores that placement. A viewport with no previous visible guide cannot create a meaningful Freeze and displays a hint instead.
 
 ## Selection placement
 
 1. Collect the visible selected geometric objects.
 2. Measure their combined minimum and maximum **world Z** using evaluated vertices. In Edit Mode use the current editable mesh.
 3. Use the horizontal bounds' half-diagonal as a stable envelope. Place a vertical world-space ruler and figure outside it along the viewport's horizontal left direction, with the configured physical width offset.
-4. Ease position and orbit changes with frame-rate independent following. The configured figure height and ruler's world-Z span remain constant. A negative width offset moves inward and can reduce surface clearance during orbit.
+4. Ease position and orbit changes with frame-rate independent following, defaulting to a subtle 0.02 s response. The configured figure height and ruler's world-Z span remain constant. A negative width offset moves inward and can reduce surface clearance during orbit.
 
 Only supported geometry is measured; cameras, lights, Empty helpers and armatures themselves are excluded. The ruler starts at zero at the geometry's lowest point.
 
 ## Mouse placement
 
-With no selection, the ruler and figure follow the mouse in the active 3D viewport. The whole figure stays left of the pointer with a configurable gap. Its height is specified in physical metres, converted through the scene's unit scale.
+With no selection and **Only With Selection** disabled, the ruler and optional figure follow the mouse in the active 3D viewport. No object or model caption is shown, including when reopening an old frozen mouse reference. The whole figure stays left of the pointer with a configurable gap. Its height is specified in physical metres, converted through the scene's unit scale.
 
 The anchor is calculated at the view depth of the 3D Cursor. Entering the sidebar or another editor hides the live mouse guide. The last displayed position is cached so clicking Freeze in the sidebar captures the intended location.
 
@@ -44,7 +47,7 @@ Freeze captures the displayed ruler endpoints and tick positions in world space,
 
 While frozen, geometry-changing controls are disabled. Units, font size, line width, line/text RGBA, font choice, figure opacity and visibility remain editable. The snapshot, display settings and baked reference mesh persist in the scene when the blend file is saved. Unfreezing clears the snapshot and resumes the current selection or mouse placement. A successful new model import also resumes following; an unsuccessful import preserves the existing reference.
 
-Only the physical half-height and full-height values are labelled, to the screen-left of their projected marks. Perspective views project the actual world midpoint rather than averaging the screen endpoints. New Freeze snapshots store that midpoint; existing snapshots recover it from their world endpoints. Crowded labels reduce to the full height, and offscreen marks do not create labels at the viewport edge.
+By default only full height is labelled, to the screen-left of its projected mark. **Show Half-Height Value** optionally adds the physical midpoint text and remains editable while frozen. It does not remove the midpoint crossbar or alter minor tick density. Perspective views project the actual world midpoint rather than averaging screen endpoints. New Freeze snapshots store that midpoint; existing snapshots recover it from their world endpoints. Crowded labels reduce to full height, and offscreen marks do not create labels at the viewport edge.
 
 Zoom fades decimal tick layers down to 1 mm. Auto units use projected density to select m, cm or mm; during a handoff only the dominant unit is drawn, at its transition opacity. Far and top views retain one full-height readout and a smaller object name. The same readout moves between midpoint and endpoint during the detail transition, without drawing duplicate text. Frozen guides retain these zoom-dependent display changes.
 
@@ -54,7 +57,7 @@ Appearance settings save with each scene. Local TTF, OTF and TTC fonts are loade
 
 ## Reference loading
 
-Local 1.4.0 also supports [object attachments](OBJECT_ATTACHMENTS.md). Each scene stores independent object pointers, display choices and appearance snapshots, with retained immutable reference mesh IDs. Entries reuse the live layout/drawing path with their own animation/density keys. Live Freeze and mouse tracking remain independent. Target geometry is evaluated again as it changes; hidden or missing targets are skipped. Removal acts on records and unowned normalized reference meshes, never on target objects.
+[Object attachments](OBJECT_ATTACHMENTS.md), introduced in 1.4.0, store independent object pointers, display choices and appearance snapshots with retained immutable reference mesh IDs. New entries capture the half-height text checkbox; older records without that field preserve their historical visible half-height. Entries reuse the live layout/drawing path with their own animation/density keys. Live Freeze and selection-only filtering remain independent. Target geometry is evaluated again as it changes; hidden or missing targets are skipped. Removal acts on records and unowned normalized reference meshes, never on target objects.
 
 Import occurs in a temporary scene. The evaluated visible surfaces are combined, optional axis correction is applied, large references are simplified, and the result is normalized to unit height. The normalized display mesh is retained as scene data; the temporary objects, rigs, materials and import data are removed. The original scene selection and active object are restored.
 
@@ -76,9 +79,11 @@ The viewport draws this reference with its own depth buffer and a neutral-gray s
 
 参照有隐藏、选中物体跟随、鼠标跟随及冻结四种状态。上方状态图展示其切换关系。显示开关与放置方式独立：隐藏参照时可以保留冻结位置，重新显示后恢复原位置。视口里从未显示过参照时，无法凭空冻结，界面会提示先显示尺子或人物。
 
+**仅选中时显示**默认开启，只有选中可见且可测量的几何体时才显示实时参照；已有显式冻结和物体绑定不受影响。跟随缓动默认 0.02 秒，保留轻微平滑。
+
 选中时，收集可见的选中几何体，计算评估顶点在世界 Z 轴上的整体范围。以水平包围范围的半对角线构成稳定边界，沿视口水平左侧方向将三维竖直尺子与人物放在边界之外，并加入实际宽度偏移。位置与旋转变化使用与帧率无关的平滑跟随；人物身高及尺子的世界 Z 高度保持实际尺寸。负宽度偏移向内靠近，旋转时可能减少与表面的间隔。编辑模式读取当前编辑网格。尺子最低点从 0 开始，不测量海拔；相机、灯光、Empty 和骨架本体不参与高度测量。
 
-未选中时，以 3D Cursor 的视图深度为基础计算鼠标锚点，尺子和人物跟随当前 3D 视口内的鼠标，并保留左侧间隔。参考高度始终以米输入，再按场景单位缩放换算。鼠标进入侧栏或其他编辑器时，实时参照隐藏；会记住最后显示的位置，供侧栏 Freeze 捕获。
+取消**仅选中时显示**后，未选中时以 3D Cursor 的视图深度计算鼠标锚点，尺子和可选人物跟随当前 3D 视口内的鼠标，并保留左侧间隔。不显示物体或模型名称，旧版鼠标冻结快照也不会再显示原名称。参考高度始终以米输入，再按场景单位换算。鼠标进入侧栏或其他编辑器时实时参照隐藏，保留最后位置供侧栏 Freeze 捕获。
 
 ### 冻结
 
@@ -86,7 +91,7 @@ The viewport draws this reference with its own depth buffer and a neutral-gray s
 
 冻结时锁定会改变参照几何形态的参数，仍可调整单位、字号、线宽、线与文字各自 RGBA、字体、人物不透明度和显示开关。快照、显示设置及参考网格随场景保存。解除冻结后清除快照并恢复当前的选择或鼠标跟随。成功加载新模型也会恢复跟随；加载失败保留旧参照。
 
-数值只标注实际半高与全高，位于各自投影刻度的屏幕左侧。透视视图投影真实的三维中点，不直接平均屏幕端点。新冻结快照保存中点，旧快照从世界端点恢复。空间拥挤时仅显示全高，屏幕外的刻度不会把文字挤到视口边缘。
+默认只显示左侧全高数值，开启**显示半高数值**后增加实际中点文字；冻结后仍可切换，不改变中点横条或小刻度密度。透视视图投影真实三维中点，新冻结快照保存中点，旧快照从世界端点恢复。空间拥挤时只保留全高，屏幕外刻度不会把文字挤到视口边缘。
 
 缩放时逐层渐变十进制刻度，最细到 1 mm。自动单位依据投影密度在 m、cm、mm 之间变化；交接时只绘制当前权重较高的一套文字，并保留过渡透明度。远景及俯视保留一个全高数值和较小物体名称；同一套读数在中点与顶点之间移动，避免过渡时重复绘制。冻结后仍保留这些随缩放变化的显示细节。
 
@@ -96,7 +101,7 @@ The viewport draws this reference with its own depth buffer and a neutral-gray s
 
 ### 人物加载与交互
 
-本地 1.4.0 还支持[物体绑定参照](OBJECT_ATTACHMENTS.md)。每个场景保存独立目标指针、显示选择与外观快照，通过 ID 引用保留不可变的人物网格。条目复用实时布局和绘制，拥有独立的缓动及投影密度缓存；实时 Freeze 与鼠标追踪保持独立。目标变化时重新评估几何，隐藏或缺失时跳过。删除只处理记录和不再被引用的归一化人物网格，绝不操作目标物体。
+1.4.0 起支持[物体绑定参照](OBJECT_ATTACHMENTS.md)。每个场景保存独立目标指针、显示选择与外观快照，通过 ID 引用保留不可变人物网格。新条目保存半高文字开关；缺少该字段的旧记录保留原来的中位文字。条目复用布局和绘制，拥有独立缓动及密度缓存，不受实时 Freeze 或仅选中时显示影响。目标变化时重新评估几何，隐藏或缺失时跳过。删除只处理记录与不再被引用的归一化人物网格，绝不操作目标物体。
 
 使用临时场景导入并评估可见表面，合并几何体，按需修正向上轴、简化大型模型，再归一化为单位高度。只保留显示用的参考网格数据，清理临时对象、骨架、材质等导入数据，并恢复原场景的选择和活动对象。
 

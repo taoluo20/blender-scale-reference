@@ -2,6 +2,12 @@
 
 **English** · [简体中文](#简体中文)
 
+## 1.5.0 selection defaults - 2026-10-29
+
+Blender 5.2.2 LTS passed **297 checks** in isolated factory-startup configurations with a real TTF font: the retained 267-check baseline and 30 new checks. These exercise default selection-only/no-figure/no-midpoint settings, 0.02 s response timing, deselect/reselect, unmeasurable selections, optional mouse following without captions, old mouse Freeze captions and padding, explicit Freeze and attachment independence, full-height continuity, unchanged frozen geometry/crossbars, saved checkbox overrides and 1.4.0 attachment migration. The new midpoint option controls text only; 24 px ticks remain. This development run did not exercise Blender 4.5 or 5.1.
+
+The final ZIP passed manifest validation and isolated installation/enabling. Checks against the installed extension namespace verified the new defaults, selected full-height-only display, deselection hiding, nameless optional mouse and frozen-mouse rulers, captured attachment style, batch hiding and record deletion without changing target objects. Repeated builds match source bytes. Eight native non-isometric perspective states produced ten refreshed public PNGs: default selection, deselection, optional mouse, mouse Freeze, custom appearance, optional half-height, Chinese UI and optional gray-Manny attachments. All reported no draw errors. The source mannequin and generated review blends remain local and ignored.
+
 ## 1.4.0 object attachments — 2026-10-29
 
 The subsequent gray-preview step retained all **259 checks**. Epic's actual UE 5.8.2 `SKM_Manny_Simple` was exported locally, imported as 92,178 triangles, and used for nine native perspective captures including A attached with B live and two attachments with live C. Every captured view reported `PERSP` and no draw errors. All documented preview PNGs were refreshed. UE source and derived model data remain ignored and excluded from the ZIP; automated fixtures remain self-authored. See [preview provenance](UE_MANNEQUIN.md).
@@ -50,6 +56,12 @@ This record describes the exercised cases. Unlisted Blender versions, import var
 ---
 
 ## 简体中文
+
+### 1.5.0 选中显示默认值 - 2026-10-29
+
+Blender 5.2.2 LTS 在隔离的出厂配置中使用真实 TTF 字体通过 **297 项检查**，保留原有 267 项并新增 30 项。覆盖仅选中显示/无人物/无半高默认值、0.02 秒响应时序、取消与恢复选择、不可测量选择、鼠标无名显示、旧鼠标冻结名称及留白、显式冻结和绑定独立性、全高过渡连续性、冻结位置及横条不变、新开关保存重开与 1.4.0 绑定迁移。半高选项只控制文字，小刻度仍为 24 px；本轮未在 4.5 或 5.1 运行。
+
+最终 ZIP 通过扩展清单验证与隔离安装启用，并在实际安装的扩展命名空间中验证新默认值、选中时仅显示全高、取消选择隐藏、鼠标及鼠标冻结无名称、绑定外观快照、批量隐藏和安全删除记录；目标物体保持完整。重复构建与源码字节一致。8 种原生非等距透视状态生成 10 张更新的公开 PNG，覆盖默认选中、取消选择、可选鼠标跟随、鼠标冻结、自定义外观、可选半高、中文界面和可选灰色 Manny 绑定，均无绘制异常。人物源资产及生成的审查工程保持本地忽略。
 
 ### 1.4.0 物体绑定 — 2026-10-29
 

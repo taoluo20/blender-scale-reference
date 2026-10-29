@@ -1,8 +1,10 @@
-# Object Attachments — 1.4.0
+# Object Attachments
 
 **English** · [简体中文](#简体中文)
 
 Object attachments retain independent references while the live selection/mouse guide continues.
+
+In 1.5.0, **Only With Selection** filters only the live guide. Visible saved attachments continue displaying after deselection. New attachments capture **Show Half-Height Value** (default off); records created in 1.4.0 without that field retain their original visible midpoint value.
 
 ## Keep a reference beside an object
 
@@ -42,6 +44,8 @@ Default review and saved handoff views use non-isometric perspective. The exampl
 ## 简体中文
 
 物体绑定在原目标旁持续保留独立参照，实时选中/鼠标跟随继续工作。
+
+1.5.0 的**仅选中时显示**只过滤实时参照，取消选择后可见的旧绑定继续显示。新绑定保存**显示半高数值**开关（默认关闭）；1.4.0 旧记录缺少该字段时保留原来的中位数值。
 
 ### 在物体旁持续保留参照
 

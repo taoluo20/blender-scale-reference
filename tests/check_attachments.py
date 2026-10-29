@@ -49,6 +49,7 @@ target_b.location = (3, 0, 1.2)
 target_b.scale = (.5, .4, 1.2)
 scene.unit_settings.system = 'METRIC'
 settings.enabled = True
+settings.only_with_selection = False
 settings.follow_smoothing = 0
 bpy.ops.view3d.height_axis_load_reference(filepath=str(ROOT / 'tests/fixtures/mannequin.blend'))
 mesh = settings.reference_mesh

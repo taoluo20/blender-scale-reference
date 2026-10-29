@@ -167,6 +167,9 @@ def _live_ruler_layout(context, require_enabled=True, settings=None, target=None
     if target and not bounds:
         placement.forget(key)
         return None
+    if not target and not bounds and settings.only_with_selection:
+        placement.forget(key)
+        return None
     if bounds:
         low, high = bounds
         span = max(0.0, high[2] - low[2])
@@ -194,7 +197,7 @@ def _live_ruler_layout(context, require_enabled=True, settings=None, target=None
         gap, radius = (anchor - shifted).length, 0.0
         span = figure_height
         anchor.z -= span / 2
-        label = Path(settings.reference_name).stem if settings.reference_name else bpy.app.translations.pgettext_iface('Reference')
+        label = ''
         mode = 'REFERENCE'
         identity = (mode,)
         mouse_position = tuple(mouse)
@@ -361,9 +364,15 @@ def ruler_labels(context, model, unit=None, compact=False, settings=None):
         factor *= _scene_scale(context.scene)
     else:
         factor, suffix = _unit(context.scene, settings, model['span'])
-    points = [Vector(model['midpoint'])] if compact else [Vector(model['midpoint']), Vector(model['points'][1])]
-    values = [model['span']] if compact else [model['span'] / 2, model['span']]
-    name_height = max(8, round(size * 0.72)) + 4 * model['scale'] if model.get('label') else 0
+    if compact:
+        points, values = [Vector(model['midpoint'])], [model['span']]
+    elif settings.show_half_height:
+        points = [Vector(model['midpoint']), Vector(model['points'][1])]
+        values = [model['span'] / 2, model['span']]
+    else:
+        points, values = [Vector(model['points'][1])], [model['span']]
+    name_height = (max(8, round(size * 0.72)) + 4 * model['scale']
+                   if model.get('label') and model.get('mode') != 'REFERENCE' else 0)
     labels = []
     for index, (point, value) in enumerate(zip(points, values)):
         if point.y < 0 or point.y > region.height:
@@ -377,7 +386,7 @@ def ruler_labels(context, model, unit=None, compact=False, settings=None):
 
 
 def ruler_name(context, model, compact=False, settings=None):
-    if not model.get('label'):
+    if not model.get('label') or model.get('mode') == 'REFERENCE':
         return None
     point = Vector(model['midpoint'] if compact else model['points'][1])
     if point.y < 0 or point.y > context.region.height:
@@ -591,6 +600,8 @@ def _undo_changed(*_args):
 class HEIGHTAXIS_Settings(PropertyGroup):
     enabled: BoolProperty(name='Show Height Axis', default=False,
                           description='Show the selected geometry height, or a mouse-following reference ruler', update=_changed)
+    only_with_selection: BoolProperty(name='Only With Selection', default=True, update=_changed,
+                                      description='Hide live guides without selected geometry; keep frozen and attached references')
     frozen: BoolProperty(name='Freeze', default=False, update=_freeze_changed,
                          description='Pin the current ruler and figure in world space; uncheck to resume following')
     frozen_data: StringProperty(options={'HIDDEN'})
@@ -601,7 +612,7 @@ class HEIGHTAXIS_Settings(PropertyGroup):
     object_gap_metres: FloatProperty(name='Width Offset (m)', default=0.35, soft_min=-2, soft_max=5,
                                     precision=3, update=_changed,
                                     description='Offset from the widest horizontal extent; negative values move inside and may change surface clearance during orbit')
-    follow_smoothing: FloatProperty(name='Follow Smoothing (s)', default=0.12, min=0, max=1,
+    follow_smoothing: FloatProperty(name='Follow Smoothing (s)', default=0.02, min=0, max=1,
                                     precision=3, update=_changed)
     show_extensions: BoolProperty(name='Show Connection Lines', default=False, update=_changed)
     font_size: IntProperty(name='Font Size', default=14, min=10, max=28, update=_changed)
@@ -609,6 +620,8 @@ class HEIGHTAXIS_Settings(PropertyGroup):
     tick_spacing: FloatProperty(name='Tick Spacing (px)', default=24, min=4, max=80, soft_max=48,
                                  precision=1, update=_changed,
                                  description='Minimum screen spacing for minor ticks to fade in; larger values show fewer ticks')
+    show_half_height: BoolProperty(name='Show Half-Height Value', default=False, update=_changed,
+                                   description='Label the physical midpoint in addition to the full height; keep tick spacing unchanged')
     opacity: FloatProperty(name='Ruler Opacity', default=1, min=0, max=1, subtype='FACTOR', update=_changed)
     line_color: FloatVectorProperty(name='Line Color', subtype='COLOR', size=4,
                                     min=0, max=1, default=(1, 1, 1, 0.65), update=_changed)
@@ -756,6 +769,7 @@ class VIEW3D_PT_height_axis(Panel):
     def draw(self, context):
         layout, settings = self.layout, _settings(context.scene)
         layout.prop(settings, 'enabled')
+        layout.prop(settings, 'only_with_selection')
         row = layout.row()
         row.active = bool(_needs_display(settings)) or settings.frozen
         row.prop(settings, 'frozen')
@@ -765,6 +779,8 @@ class VIEW3D_PT_height_axis(Panel):
             layout.label(text='Pinned in world space', icon='LOCKED')
         elif context.selected_objects:
             layout.label(text='Selection: view-left')
+        elif settings.only_with_selection:
+            layout.label(text='No selection', icon='RESTRICT_SELECT_ON')
         else:
             layout.label(text='No selection: mouse-left')
         geometry = layout.column()
@@ -843,6 +859,7 @@ class VIEW3D_PT_height_axis_appearance(Panel):
         layout.prop(settings, 'font_size')
         layout.prop(settings, 'line_width')
         layout.prop(settings, 'tick_spacing', slider=True)
+        layout.prop(settings, 'show_half_height')
         layout.prop(settings, 'opacity', slider=True)
         layout.prop(settings, 'line_color')
         layout.prop(settings, 'text_color')

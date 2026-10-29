@@ -32,6 +32,7 @@ scene = bpy.context.scene
 settings = scene.height_axis
 scene.unit_settings.system = 'METRIC'
 settings.units = 'M'
+settings.show_half_height = True
 check('ruler defaults to translucent white', close_values(settings.line_color, (1, 1, 1, 0.65)))
 check('text defaults to translucent white', close_values(settings.text_color, (1, 1, 1, 0.75)))
 check('default font needs no external file', not settings.font_path and addon.fonts.font_id('') == 0)

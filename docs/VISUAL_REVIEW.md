@@ -2,6 +2,12 @@
 
 **English** · [简体中文](#简体中文)
 
+## 1.5.0 default display review
+
+The default review now shows a selected-object ruler without a figure or half-height value, using 0.02 s following and unchanged 24 px ticks. Eight actual non-isometric perspective states cover selection, deselection hiding, nameless optional mouse following, nameless mouse Freeze, custom appearance, optional half-height, Chinese UI and optional gray-Manny bindings. Ten public PNGs were refreshed. The binding example keeps two saved references beside A/B and a separate live reference beside C, with the list visible and labels separated. All states reported no draw errors. See the [visual guide](VISUAL_GUIDE.md) and [validation record](VALIDATION.md).
+
+## Earlier 1.3.0 review
+
 Reviewed the local 1.3.0 source, placement and Freeze logic, reference rendering, fonts, translations, packaging, tests and documentation. Native viewport checks used Blender 5.2.2 LTS and a separate generated review scene.
 
 | Finding | Adjustment |
@@ -22,6 +28,12 @@ The initial Blender 5.2.2 integration run passed 188 checks, including four new 
 ---
 
 ## 简体中文
+
+### 1.5.0 默认显示审查
+
+默认预览展示选中物体的尺子，不显示人物与半高数值，跟随为 0.02 秒，小刻度仍为 24 px。8 种真实非等距透视状态覆盖选中、取消选择隐藏、无名称的可选鼠标跟随和鼠标冻结、自定义外观、可选半高、中文界面及可选灰色 Manny 绑定，重拍了 10 张公开 PNG。绑定示例同时展示 A/B 的两个已保存参照和 C 的独立实时参照，列表可见，标签互不重叠，所有状态均无绘制异常。详见[视觉指南](VISUAL_GUIDE.md)及[验证记录](VALIDATION.md)。
+
+### 较早的 1.3.0 审查
 
 本轮通读了本地 1.3.0 源码、放置与冻结逻辑、人物绘制、字体、翻译、打包、测试及文档。使用 Blender 5.2.2 LTS 和独立生成的审查场景检查真实视口。
 
