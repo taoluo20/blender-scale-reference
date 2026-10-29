@@ -20,6 +20,16 @@ With **Only With Selection** enabled, deselecting geometry hides the live ruler.
 
 Uncheck **Only With Selection** to restore the mouse ruler when nothing is selected. It follows on the left without an object/model caption. An independently loaded figure is optional. Leaving the checkbox enabled hides live guides after deselection.
 
+## Mouse tip and underground views
+
+Enable **Ruler at Mouse Tip** to place the ruler base at the pointer. **Mouse Gap (px)** is disabled until the checkbox is off. The physical reference height is unchanged.
+
+![Mouse-tip placement and its checkbox](images/mouse-tip.png)
+
+Mouse placement normally starts on Z=0 with matching screen projection. When the view centre and all visible geometry are below zero, it follows the current view depth instead.
+
+![Automatic release below world zero](images/underground.png)
+
 ## Freeze: keep a location
 
 ![Frozen world-space reference in Blender](images/frozen.png)
@@ -36,6 +46,7 @@ Visibility, **Only With Selection**, Freeze, reference height and units stay in 
 | --- | --- |
 | Show Scale Reference | Ruler visibility |
 | Only With Selection | Hide the live guide without selected geometry; keep frozen and attached references |
+| Ruler at Mouse Tip | Place the mouse ruler base at the pointer; default off, ignores Mouse Gap while enabled |
 | Freeze | Capture or release world-space placement |
 | Reference Height (m) | Physical height of the mouse ruler and reference figure |
 | Width Offset (m) / Mouse Gap (px) | Physical selection offset / screen-space mouse gap |
@@ -80,6 +91,16 @@ The screenshots are exported from a real Blender viewport. New previews default 
 
 第三张图为冻结：Freeze 勾选后，两种参照固定在世界三维位置。复选框和锁定的几何参数显示当前状态；旋转视角只改变固定位置的投影，尺子底部不再显示说明文字。
 
+### 鼠标尖端与地下视图
+
+勾选**尺子对齐鼠标尖端**，尺子底部直接位于指针处，实际参考高度保持不变；此时**鼠标间距 (px)** 暂时禁用。
+
+![鼠标尖端放置及复选框](images/mouse-tip.png)
+
+鼠标参照通常从 Z=0 开始，并在屏幕上保持对齐；观察中心与全部可见几何体都低于零时，自动改为当前视口深度跟随。
+
+![地下视图自动解除零高度约束](images/underground.png)
+
 ### 控件
 
 主面板保留显示、**仅选中时显示**、冻结、参考身高和单位。模型加载与人物参数归入“参考人物”；“放置与跟随”和“尺子外观”可独立折叠。
@@ -90,6 +111,7 @@ The screenshots are exported from a real Blender viewport. New previews default 
 | --- | --- |
 | Show Scale Reference / 显示尺度参考 | 控制尺子显示 |
 | Only With Selection / 仅选中时显示 | 未选中几何体时隐藏实时参照，保留冻结和绑定 |
+| Ruler at Mouse Tip / 尺子对齐鼠标尖端 | 鼠标尺底部直接对齐指针，默认关闭；开启时忽略鼠标间距 |
 | Freeze / 停止跟随 | 捕获或解除三维固定位置 |
 | Reference Height (m) / 参考高度 | 鼠标参考尺与人物的真实身高，单位为米 |
 | Width Offset (m) / Mouse Gap (px) | 选中范围的实际偏移 / 鼠标屏幕间距 |

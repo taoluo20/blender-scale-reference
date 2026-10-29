@@ -14,7 +14,7 @@ from bpy.types import Operator, Panel, PropertyGroup
 from bpy_extras import view3d_utils
 from bpy_extras.io_utils import ImportHelper
 from gpu_extras.batch import batch_for_shader
-from mathutils import Vector
+from mathutils import Matrix, Vector
 
 from .core import format_number, metric_ticks, metric_units, ruler_detail, visible_line_fraction
 from . import reference, freeze, localization, fonts, placement, attachments
@@ -136,6 +136,39 @@ def _project(region, rv3d, point):
     return result
 
 
+def _mouse_plane_point(region, rv3d, coordinate, height=0.0):
+    """Invert the viewport projection restricted to a horizontal world plane."""
+    projection = rv3d.perspective_matrix
+    plane = Matrix(tuple((projection[row][0], projection[row][1],
+                          projection[row][2] * height + projection[row][3])
+                         for row in (0, 1, 3)))
+    try:
+        ground = plane.inverted() @ Vector((2 * coordinate[0] / region.width - 1,
+                                           2 * coordinate[1] / region.height - 1, 1))
+    except ValueError:
+        return None
+    if abs(ground.z) < 1e-8:
+        return None
+    point = Vector((ground.x / ground.z, ground.y / ground.z, height))
+    clip = projection @ point.to_4d()
+    if not all(math.isfinite(value) for value in clip) or clip.w <= 0 or abs(clip.z) > clip.w:
+        return None
+    return point
+
+
+def _below_ground_view(context):
+    if context.region_data.view_location.z >= 0:
+        return False
+    found = False
+    for obj in context.visible_objects:
+        bounds = _object_bounds(context, obj)
+        if bounds is not None:
+            if bounds[1][2] >= 0:
+                return False
+            found = True
+    return found
+
+
 def ruler_layout(context, require_enabled=True):
     settings = _settings(context.scene)
     if not _needs_display(settings) or (require_enabled and not settings.enabled):
@@ -190,19 +223,32 @@ def _live_ruler_layout(context, require_enabled=True, settings=None, target=None
             placement.forget(key)
             return None
         mouse = Vector(hover[1])
-        anchor = view3d_utils.region_2d_to_location_3d(
-            region, rv3d, mouse, context.scene.cursor.location)
-        shifted = view3d_utils.region_2d_to_location_3d(
-            region, rv3d, mouse - Vector((settings.left_offset * ui_scale, 0)), anchor)
-        gap, radius = (anchor - shifted).length, 0.0
+        below_ground = _below_ground_view(context)
+        height = (view3d_utils.region_2d_to_location_3d(region, rv3d, mouse, rv3d.view_location).z
+                  if below_ground else 0.0)
+        anchor = _mouse_plane_point(region, rv3d, mouse, height)
+        if anchor is None:
+            placement.forget(key)
+            return None
+        if settings.ruler_at_mouse:
+            gap = 0.0
+        else:
+            shifted = _mouse_plane_point(region, rv3d, mouse - Vector((settings.left_offset * ui_scale, 0)), height)
+            if shifted is None:
+                placement.forget(key)
+                return None
+            right = anchor - shifted
+            gap = right.length
+        radius = 0.0
         span = figure_height
-        anchor.z -= span / 2
         label = ''
         mode = 'REFERENCE'
-        identity = (mode,)
+        identity = (mode, 'VIEW_DEPTH' if below_ground else 'GROUND', settings.ruler_at_mouse)
         mouse_position = tuple(mouse)
     goal = placement.target(anchor, right, span, radius, gap, figure_radius, figure_height,
                             settings.reference_yaw, identity)
+    if mode == 'REFERENCE' and settings.ruler_at_mouse and figure_radius > 0:
+        goal['anchor'] += anchor - placement.geometry(goal)['points'][0]
     world = placement.follow(key, goal, settings.follow_smoothing)
     points = [_project(region, rv3d, point) for point in world['points']]
     middle = _project(region, rv3d, world['midpoint'])
@@ -602,6 +648,8 @@ class HEIGHTAXIS_Settings(PropertyGroup):
                           description='Show the selected geometry height, or a mouse-following reference ruler', update=_changed)
     only_with_selection: BoolProperty(name='Only With Selection', default=True, update=_changed,
                                       description='Hide live guides without selected geometry; keep frozen and attached references')
+    ruler_at_mouse: BoolProperty(name='Ruler at Mouse Tip', default=False, update=_changed,
+                                description='Place the ruler base at the mouse tip instead of using the left gap; applies when no geometry is selected')
     frozen: BoolProperty(name='Freeze', default=False, update=_freeze_changed,
                          description='Pin the current ruler and figure in world space; uncheck to resume following')
     frozen_data: StringProperty(options={'HIDDEN'})
@@ -770,6 +818,9 @@ class VIEW3D_PT_height_axis(Panel):
         layout, settings = self.layout, _settings(context.scene)
         layout.prop(settings, 'enabled')
         layout.prop(settings, 'only_with_selection')
+        mouse = layout.row()
+        mouse.enabled = not settings.only_with_selection and not settings.frozen
+        mouse.prop(settings, 'ruler_at_mouse')
         row = layout.row()
         row.active = bool(_needs_display(settings)) or settings.frozen
         row.prop(settings, 'frozen')
@@ -781,6 +832,8 @@ class VIEW3D_PT_height_axis(Panel):
             layout.label(text='Selection: view-left')
         elif settings.only_with_selection:
             layout.label(text='No selection', icon='RESTRICT_SELECT_ON')
+        elif settings.ruler_at_mouse:
+            layout.label(text='No selection: mouse tip')
         else:
             layout.label(text='No selection: mouse-left')
         geometry = layout.column()
@@ -840,7 +893,9 @@ class VIEW3D_PT_height_axis_placement(Panel):
         if settings.object_gap_metres < 0:
             geometry.label(text='Inside widest extent', icon='INFO')
             geometry.label(text='Orbit clearance may vary')
-        geometry.prop(settings, 'left_offset')
+        mouse = geometry.row()
+        mouse.enabled = not settings.ruler_at_mouse
+        mouse.prop(settings, 'left_offset')
         geometry.prop(settings, 'follow_smoothing', slider=True)
         layout.prop(settings, 'show_extensions')
 

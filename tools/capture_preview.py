@@ -3,7 +3,7 @@
 
 Run after tests have generated tests/fixtures/mannequin.blend. Set the three
 BLENDER_USER_* directories to a disposable configuration before launching.
-The script creates a local study scene, exports four previews, then quits.
+The script creates a local study scene, exports wide viewport previews, then quits.
 """
 
 import json
@@ -58,6 +58,9 @@ scene.height_axis.show_reference = False
 
 window = bpy.context.window
 area = next(area for area in window.screen.areas if area.type == 'VIEW_3D')
+with bpy.context.temp_override(window=window, area=area):
+    bpy.ops.screen.screen_full_area(use_hide_panels=False)
+area = next(area for area in window.screen.areas if area.type == 'VIEW_3D')
 space = area.spaces.active
 region = next(region for region in area.regions if region.type == 'WINDOW')
 ui = next(region for region in area.regions if region.type == 'UI')
@@ -81,6 +84,7 @@ def setup():
 
 def screenshot(name):
     with bpy.context.temp_override(window=window, area=area, region=region):
+        assert region.width / region.height >= 16 / 9, 'Launch Blender with a wide window, such as -p 100 100 2400 1200'
         guide, figure = addon.display_layout(bpy.context)
         assert guide and not addon._last_error, addon._last_error
         bpy.ops.screen.screenshot_area(filepath=str(OUTPUT / name), hide_props_region=False)
@@ -103,7 +107,7 @@ def mouse():
     scene.height_axis.only_with_selection = False
     target.select_set(False)
     bpy.context.view_layer.objects.active = None
-    addon._hover[window.as_pointer()] = (area.as_pointer(), (region.width * 0.42, region.height * 0.53))
+    addon._hover[window.as_pointer()] = (area.as_pointer(), (region.width * 0.42, region.height * 0.3))
     area.tag_redraw()
 
 

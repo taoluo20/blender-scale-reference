@@ -2,6 +2,12 @@
 
 **English** · [简体中文](#简体中文)
 
+## 1.6.0 mouse placement - 2026-10-29
+
+Blender 5.2.2 LTS passed **336 checks** with a real TTF font: the previous 297 checks plus 39 for grounded projection, underground release and mouse-tip placement. Coverage includes pixel alignment, perspective/orthographic/rolled views, non-metre scene scales, horizon and clipping rejection, mixed/hidden geometry, immediate ground restoration, figure-aware tip placement, Freeze independence, legacy attachments and save/reopen defaults.
+
+The final ZIP passed manifest validation, reproducible source-byte comparisons and isolated installation. The installed namespace exposes the new checkbox and mouse-tip behavior and reopens the actual 1.5.0 scene with two attachments intact. Ten native non-isometric perspective states produced twelve landscape public PNGs with aspect ratios of at least 16:9 and no draw errors. This release was not tested on Blender 4.5 or 5.1.
+
 ## 1.5.1 Scale Reference rename - 2026-10-29
 
 The renamed source retained **297 passing checks on Blender 5.2.2 LTS** with a real TTF font. Manifest validation, reproducible builds and isolated installation passed. The installed extension exposes the new panel and checkbox names, converts ft/in and scene-imperial units correctly, and reopens the actual 1.5.0 review scene with its two object attachments intact. The internal extension ID and saved-data identifiers remain unchanged.
@@ -62,6 +68,12 @@ This record describes the exercised cases. Unlisted Blender versions, import var
 ---
 
 ## 简体中文
+
+### 1.6.0 鼠标放置 - 2026-10-29
+
+Blender 5.2.2 LTS 使用真实 TTF 字体通过 **336 项检查**，保留原有 297 项，新增 39 项地面投影、地下解除约束及鼠标尖端放置检查。覆盖像素对齐、透视/正交/滚转、非米场景比例、地平线与裁剪、混合及隐藏几何体、立即恢复零高度、人物显示时的尖端对齐、冻结独立性、旧绑定与保存重开默认值。
+
+最终 ZIP 通过清单、可重复构建、源码字节比较与隔离安装；实际安装命名空间具备新开关及尖端行为，并成功读取真实 1.5.0 工程和其中两条绑定。10 种原生非等距透视状态生成 12 张宽高比至少 16:9 的横向公开 PNG，均无绘制错误。本版本未在 Blender 4.5 或 5.1 测试。
 
 ### 1.5.1 Scale Reference 更名 - 2026-10-29
 

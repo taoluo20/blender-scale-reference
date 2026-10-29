@@ -2,6 +2,10 @@
 
 **English** · [简体中文](#简体中文)
 
+## 1.6.0 mouse projection and tip placement
+
+Reviewed the new main-panel checkbox, disabled gap state, screen-matched grounded placement and automatic underground release. Twelve wide native PNGs cover ten perspective states, including mouse-left, mouse-tip and underground examples. Each mouse capture verifies the projected base against the target pixel within 0.01 px. The full integration suite passed 336 checks. New release pages keep the current gallery only; older release image embeds are removed without rewriting tags or installers.
+
 ## 1.5.1 naming review
 
 Recaptured all ten public PNGs from eight native perspective states for the **Scale Reference** panel and **Show Scale Reference** checkbox. English and Chinese labels fit the sidebar; default selection, optional mouse/Freeze, appearance, midpoint and object-attachment states retain the 1.5.0 behavior. All captured states reported no draw errors.
@@ -32,6 +36,10 @@ The initial Blender 5.2.2 integration run passed 188 checks, including four new 
 ---
 
 ## 简体中文
+
+### 1.6.0 鼠标投影与尖端放置
+
+检查了主面板的新复选框、禁用的间距状态、地面屏幕对齐及地下自动解除约束。12 张宽幅原生 PNG 覆盖 10 种透视状态，包含鼠标左侧、鼠标尖端及地下示例。每个鼠标截图的投影底点均与目标像素核对，误差小于 0.01 px；完整集成检查通过 336 项。发布页只保留当前图库，撤下旧版图片嵌入，不改写历史标签及安装包。
 
 ### 1.5.1 更名审查
 

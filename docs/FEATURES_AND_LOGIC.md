@@ -39,7 +39,11 @@ Only supported geometry is measured; cameras, lights, Empty helpers and armature
 
 With no selection and **Only With Selection** disabled, the ruler and optional figure follow the mouse in the active 3D viewport. No object or model caption is shown, including when reopening an old frozen mouse reference. The whole figure stays left of the pointer with a configurable gap. Its height is specified in physical metres, converted through the scene's unit scale.
 
-The anchor is calculated at the view depth of the 3D Cursor. Entering the sidebar or another editor hides the live mouse guide. The last displayed position is cached so clicking Freeze in the sidebar captures the intended location.
+In version 1.6.0, both the pointer and its screen-left offset are inverse-projected onto world Z=0. With no figure, the ruler base projects to the pointer's screen height and the configured pixel gap; a figure reserves additional space to the left. This avoids moving the projected base when enforcing zero height and is independent of the 3D Cursor. Ground intersections at the horizon, behind the view or outside the depth clipping range are skipped.
+
+Enable **Ruler at Mouse Tip** to place the ruler base at the pointer instead of applying **Mouse Gap (px)**. It starts off, saves with the scene and applies only to live mouse placement. Selection measurements and object attachments stay view-left; Freeze retains its captured world position. With a figure visible, placement compensates its reserved width so the ruler base stays at the pointer.
+
+When the view's orbit centre is below zero and every visible measurable object has its entire evaluated geometry below zero, release the zero-height constraint. Mouse height follows the view-depth plane through the orbit centre, while the left offset remains aligned in screen space. Hidden objects do not prevent this mode; an empty scene does not enable it. Returning to a constrained view immediately restores a zero-height base. Entering the sidebar or another editor hides the live mouse guide. The last displayed position is cached so clicking Freeze in the sidebar captures the intended location. Previously saved Freeze placements retain their stored world positions.
 
 ## Freeze
 
@@ -83,7 +87,11 @@ The viewport draws this reference with its own depth buffer and a neutral-gray s
 
 选中时，收集可见的选中几何体，计算评估顶点在世界 Z 轴上的整体范围。以水平包围范围的半对角线构成稳定边界，沿视口水平左侧方向将三维竖直尺子与人物放在边界之外，并加入实际宽度偏移。位置与旋转变化使用与帧率无关的平滑跟随；人物身高及尺子的世界 Z 高度保持实际尺寸。负宽度偏移向内靠近，旋转时可能减少与表面的间隔。编辑模式读取当前编辑网格。尺子最低点从 0 开始，不测量海拔；相机、灯光、Empty 和骨架本体不参与高度测量。
 
-取消**仅选中时显示**后，未选中时以 3D Cursor 的视图深度计算鼠标锚点，尺子和可选人物跟随当前 3D 视口内的鼠标，并保留左侧间隔。不显示物体或模型名称，旧版鼠标冻结快照也不会再显示原名称。参考高度始终以米输入，再按场景单位换算。鼠标进入侧栏或其他编辑器时实时参照隐藏，保留最后位置供侧栏 Freeze 捕获。
+取消**仅选中时显示**后，未选中时启用鼠标跟随。1.6.0 将鼠标位置及屏幕左侧偏移一起反投影到世界 Z=0；无人物时，尺子底部对应鼠标的屏幕高度与设定的像素间距，有人物时向左预留额外空间。这样固定零高度后也保持视觉对齐，不依赖 3D Cursor。地平线、视图后方及深度裁剪范围外的无效地面交点会跳过。
+
+勾选**尺子对齐鼠标尖端**后，尺子底部直接对齐鼠标，不再应用**鼠标间距 (px)**。开关默认关闭、随场景保存，只影响实时鼠标模式；选中测量与物体绑定仍位于视口左侧，冻结保留已捕获的世界位置。有参考人物时补偿人物预留宽度，尺子底部仍位于鼠标尖端。
+
+当视口观察中心低于零，且每个可见可测量物体的评估后几何体都完全低于零时，解除零高度约束：鼠标高度跟随穿过观察中心的视图深度平面，左侧间距仍在屏幕空间对齐。隐藏物体不阻止该模式；空场景不触发。离开该状态后立即恢复零高度。鼠标与旧鼠标冻结参照均不显示物体或模型名称；参考高度始终以米输入，再按场景单位换算。鼠标进入侧栏或其他编辑器时实时参照隐藏，保留最后位置供侧栏 Freeze 捕获；已有冻结快照保留原来的世界位置。
 
 ### 冻结
 

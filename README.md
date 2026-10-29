@@ -4,9 +4,11 @@ A viewport height ruler and reference figure that stay on the **view-left side**
 
 **English** · [简体中文](#简体中文)
 
-**Scale Reference 1.5.1** is the renamed extension. Its internal ID remains `height_axis`, so existing scenes, frozen placements and object attachments continue to load. Update the existing extension rather than installing a second copy.
+**Version 1.6.0** adds **Ruler at Mouse Tip** and screen-matched mouse placement on world Z=0. Underground views automatically release the zero-height constraint. The internal ID remains `height_axis`, preserving existing scenes, frozen placements and object attachments.
 
-Version **1.5.1** defaults to **Only With Selection**, no reference figure and no half-height value. Enable **Show Scale Reference** and select geometry to measure it. Following now uses a subtle **0.02 s** response; minor tick spacing remains **24 px**. Mouse following and the midpoint value are optional checkboxes, and existing Freeze placements and object attachments remain available.
+Update the existing extension rather than installing a second copy.
+
+Version **1.6.0** defaults to **Only With Selection**, no reference figure and no half-height value. Enable **Show Scale Reference** and select geometry to measure it. Following now uses a subtle **0.02 s** response; minor tick spacing remains **24 px**. Mouse following and the midpoint value are optional checkboxes, and existing Freeze placements and object attachments remain available.
 
 Version **1.4.0** adds persistent object attachments and a batch visibility list while preserving live following and Freeze. Reference figures use neutral-gray shading. See [object attachments](docs/OBJECT_ATTACHMENTS.md) for the new workflow.
 
@@ -30,9 +32,11 @@ Use **Object Attachments → Attach to Object** to retain a reference beside the
 
 ## Install and use
 
-1. Download `scale-reference-1.5.1.zip` from the [1.5.1 release](https://github.com/taoluo20/blender-scale-reference/releases/tag/v1.5.1).
+1. Download `scale-reference-1.6.0.zip` from the [1.6.0 release](https://github.com/taoluo20/blender-scale-reference/releases/tag/v1.6.0).
 2. In Blender, open **Edit → Preferences → Get Extensions → menu → Install from Disk**, select the ZIP, and enable **Scale Reference**.
 3. In the 3D Viewport press **N**, open **Scale**, enable **Show Scale Reference**, and select geometry.
+
+For mouse placement, uncheck **Only With Selection**. Enable **Ruler at Mouse Tip** to place the ruler base directly at the pointer; leave it off for the saved left gap. The checkbox starts off and saves with the scene. With a visible figure, the ruler stays at the pointer and the figure keeps its physical size beside it.
 
 Use **Load Reference Figure** to choose a `.blend`, `.fbx`, `.obj`, `.gltf`, `.glb` or `.stl` model. Adjust **Reference Height (m)**, **Figure Rotation** and **Figure Opacity**. The figure has its own display checkbox.
 
@@ -60,11 +64,11 @@ The interface uses English source labels and includes Simplified Chinese transla
 
 ## Compatibility and limits
 
-The manifest declares **Blender 4.5+**. Version 1.5.1 passed **297 checks on Blender 5.2.2 LTS**, including actual font loading and old attachment/Freeze compatibility. Its final ZIP passed isolated installation, new-default and attachment checks. Eight native perspective states produced ten updated public screenshots, including the English and Chinese controls. Earlier baseline checks ran on 5.1.2; this update was not rerun on 4.5 or 5.1. See [validation details](docs/VALIDATION.md).
+The manifest declares **Blender 4.5+**. Version 1.6.0 passed **336 checks on Blender 5.2.2 LTS**, including actual font loading, mouse-tip placement, projection alignment, underground release and saved-data compatibility. The ZIP passed isolated installation and installed-namespace checks. Twelve wide public PNGs cover ten native perspective states. Earlier baseline checks ran on 5.1.2; this release was not tested on 4.5 or 5.1. See [validation details](docs/VALIDATION.md).
 
 - Height follows **world Z**, not an object's local axis. In Edit Mode the editable mesh is measured before final modifiers.
 - Unrealized instances are not included in the selection height. Realize or convert them first when needed.
-- Mouse placement uses a view-depth plane through the 3D Cursor; it does not automatically snap to the surface under the pointer.
+- Mouse placement inverse-projects the pointer and screen-left gap onto Z=0, keeping its base visually aligned. A view centre below zero with all visible geometry entirely below zero releases this constraint and uses the current view depth. Invalid ground projections near the horizon or beyond clipping are hidden. No surface snapping is performed.
 - Near a top/bottom view, the projected Z ruler collapses to a height readout and object name. The numbers remain physical heights.
 - Reference models use a single neutral-gray shaded style, with no source textures or animation playback. Hidden/non-rendering meshes and bone widgets are excluded. Large references are simplified to a display budget of about 150,000 triangles.
 - Import requires Object Mode. Loading a new model successfully resumes following; removing a figure leaves a frozen ruler in place.
@@ -87,9 +91,11 @@ Optional figure examples show Epic's UE 5.8.2 Manny in neutral gray; the default
 
 ## 简体中文
 
-**Scale Reference（尺度参考）1.5.1** 为更名版本。内部 ID 继续使用 `height_axis`，已有场景、冻结位置和物体绑定可继续读取。请更新现有扩展，无需另装一份。
+**1.6.0** 新增 **Ruler at Mouse Tip / 尺子对齐鼠标尖端**，并修正鼠标参照在世界 Z=0 上的屏幕投影对齐。地下视图自动解除零高度约束；内部 ID 保持 `height_axis`，兼容已有场景、冻结与物体绑定。
 
-**1.5.1** 默认开启**仅选中时显示**、关闭参考人物和半高数值。勾选**显示尺度参考**并选择几何体即可测量；跟随缓动默认改为轻微的 **0.02 秒**，小刻度间距保持 **24 px**。鼠标跟随与半高文字可通过开关恢复，已有冻结和物体绑定继续保留。
+请更新现有扩展，无需另装一份。
+
+**1.6.0** 默认开启**仅选中时显示**、关闭参考人物和半高数值。勾选**显示尺度参考**并选择几何体即可测量；跟随缓动默认改为轻微的 **0.02 秒**，小刻度间距保持 **24 px**。鼠标跟随与半高文字可通过开关恢复，已有冻结和物体绑定继续保留。
 
 **1.4.0** 新增持续绑定物体的参照与批量显隐列表，实时跟随和 Freeze 继续独立运行，参考人物改为中性灰立体着色。新用法见[物体绑定说明](docs/OBJECT_ATTACHMENTS.md)。
 
@@ -111,9 +117,11 @@ Scale Reference 是 Blender 的视口高度尺与参考人物工具。参照始�
 
 ### 安装与使用
 
-1. 从 [1.5.1 发布页](https://github.com/taoluo20/blender-scale-reference/releases/tag/v1.5.1)下载 `scale-reference-1.5.1.zip`。
+1. 从 [1.6.0 发布页](https://github.com/taoluo20/blender-scale-reference/releases/tag/v1.6.0)下载 `scale-reference-1.6.0.zip`。
 2. 在 Blender 打开 **Edit → Preferences → Get Extensions → 右上角菜单 → Install from Disk**，选择 ZIP 并启用 Scale Reference。
 3. 3D 视口按 **N**，打开 **Scale** 页签，勾选 **Show Scale Reference / 显示尺度参考**并选择几何物体。
+
+鼠标放置时，先取消**仅选中时显示**，再勾选 **Ruler at Mouse Tip / 尺子对齐鼠标尖端**，尺子底端就直接位于鼠标尖端；关闭时使用保存的左侧间距。该开关默认关闭并随场景保存。显示人物时，尺子仍对齐鼠标，人物在旁边保持实际尺寸。
 
 点击 **Load Reference Figure / 加载参考人物**，选择 Blend、FBX、OBJ、glTF/GLB 或 STL 文件。可调整参考身高、人物朝向和不透明度；人物有独立显示开关。
 
@@ -133,11 +141,11 @@ Scale Reference 是 Blender 的视口高度尺与参考人物工具。参照始�
 
 跟随在世界空间平滑变化，宽度偏移默认位于选中范围的水平包围之外，负值可向内靠近；连接线默认关闭。缩放时逐层显示十进制刻度，最细到 1 mm，自动单位在 m / cm / mm 之间变化。远景及俯视收为一个高度数值和较小的物体名称；过渡期间每套读数只绘制一次。
 
-清单声明 Blender 4.5+；1.5.1 在 **Blender 5.2.2 LTS 通过 297 项检查**，包含实际字体加载与旧绑定/冻结兼容。最终 ZIP 已验证隔离安装、新默认值及绑定操作；8 种原生透视状态生成了 10 张更新后的公开截图，包含中英文控件。较早的基础检查覆盖 5.1.2；本次没有在 4.5 或 5.1 重跑。详见[验证记录](docs/VALIDATION.md)。
+清单声明 Blender 4.5+；1.6.0 在 **Blender 5.2.2 LTS 通过 336 项检查**，覆盖真实字体、鼠标尖端放置、投影对齐、地下解除约束及保存数据兼容。ZIP 已验证隔离安装与实际安装命名空间；10 种原生透视状态生成 12 张宽幅公开 PNG。较早的基础检查覆盖 5.1.2；本版本未在 4.5 或 5.1 测试。详见[验证记录](docs/VALIDATION.md)。
 
 - 高度按世界 Z 轴测量。编辑模式读取修改器之前的当前编辑网格。
 - 未实体化实例不计入选中高度，需要时先 Realize Instances 或转换为实际几何体。
-- 鼠标参照使用穿过 3D Cursor 的视图深度平面，不自动贴合鼠标下方表面。
+- 鼠标参照将鼠标位置及屏幕左侧间距反投影到 Z=0，保持底部的视觉对齐。观察中心低于零且所有可见几何体完全低于零时解除该约束，改用当前视口深度；接近地平线或超出裁剪范围的无效地面投影会隐藏，不做表面吸附。
 - 俯视或仰视时，Z 轴投影接近重合，显示高度数值及物体名称，数值仍为实际高度。
 - 人物不使用原贴图、不播放动画；隐藏或不可渲染的网格及骨骼控制形状会排除。大型模型会简化为约 15 万三角面的显示参照。
 - 加载需要对象模式。成功加载新模型会恢复跟随；移除人物时，冻结的尺子仍保留原位置。

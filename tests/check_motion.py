@@ -290,6 +290,15 @@ with bpy.context.temp_override(area=area, region=region):
     check('mouse following also produces a 3D ruler and figure', mouse is not None and mouse['mode'] == 'REFERENCE' and figure is not None)
     a, b = (Vector(point) for point in mouse['world_points'])
     check('mouse ruler retains its physical reference height', close((b - a).length, settings.reference_metres / addon._scene_scale(bpy.context.scene)))
+    settings.ruler_at_mouse = True
+    tip, tip_figure = addon.display_layout(bpy.context)
+    pointer = Vector(addon._hover[bpy.context.window.as_pointer()][1])
+    check('mouse-tip ruler stays at the pointer with a visible reference figure',
+          tip_figure is not None and (Vector(tip['points'][0]) - pointer).length < .01)
+    check('mouse-tip placement preserves the figure physical height and ground base',
+          close(tip_figure['matrix'].translation.z, 0)
+          and close(tip_figure['matrix'].to_scale().z, settings.reference_metres / addon._scene_scale(bpy.context.scene)))
+    settings.ruler_at_mouse = False
 
 settings.object_gap_metres = -0.875
 settings.follow_smoothing = 0.23

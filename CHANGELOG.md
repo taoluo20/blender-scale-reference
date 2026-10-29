@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.0 - Mouse Placement and Ground Projection
+
+- Inverse-project mouse placement onto world Z=0, retaining the screen-left gap and matching the ruler base to the pointer's screen height. Handle perspective, orthographic and rolled views without changing physical height or subtle smoothing.
+- Release zero-height placement when the view centre and all visible geometry are below zero; follow the current view depth and restore Z=0 when leaving that state. Skip invalid horizon/clipped ground projections. Preserve existing frozen placements and selected-object measurements.
+- Add the scene-saved **Ruler at Mouse Tip** checkbox, default off, with figure-aware placement and a disabled gap control while active. Preserve selection, attachment and Freeze behavior.
+- Publish wide landscape viewport images; retain image embeds only on the latest GitHub release page.
+
 ## 1.5.1 - Scale Reference
 
 - Rename the extension, panel, display checkbox, repository and new installer to **Scale Reference**.
@@ -70,6 +77,13 @@
 ---
 
 ## 简体中文
+
+### 1.6.0 - 鼠标放置与地面投影
+
+- 将鼠标放置反投影到世界 Z=0，保持屏幕左侧间距及尺子底部与鼠标的屏幕高度对齐；支持透视、正交和滚转视图，保留实际高度与轻微缓动。
+- 观察中心与全部可见几何体都低于零时解除零高度约束，改为当前视口深度跟随，离开该状态后恢复 Z=0；跳过地平线及裁剪范围外的无效投影。已有冻结位置和选中物体测量保持原行为。
+- 新增随场景保存的**尺子对齐鼠标尖端**复选框，默认关闭；兼容人物显示，启用时禁用间距控件，保留选中、绑定及冻结行为。
+- 说明图采用宽幅横向视口截图；GitHub 只在最新版发布页保留图片。
 
 ### 1.5.1 - Scale Reference（尺度参考）
 
