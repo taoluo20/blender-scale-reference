@@ -29,10 +29,14 @@ def capture(context, guide, figure):
 
     points = guide.get('points', ((guide['x'], guide['y0']), (guide['x'], guide['y1'])))
     ticks = guide.get('tick_points', [((guide['x'], y), label) for y, label in guide['ticks']])
+    world_points = guide.get('world_points')
     data = {'version': 1, 'span': span, 'label': guide['label'], 'source_mode': guide['mode'],
             'anchor': tuple(anchor), 'diagram': guide['collapsed'],
-            'points': [lift(points[0], 0), lift(points[1], span)],
-            'ticks': [[value, lift(point, value)] for value, (point, _) in zip(guide['tick_values'], ticks)],
+            'points': world_points if world_points is not None else [lift(points[0], 0), lift(points[1], span)],
+            'midpoint': guide.get('world_midpoint') or lift(guide.get('midpoint', (Vector(points[0]) + Vector(points[1])) / 2), span / 2),
+            'ticks': guide.get('tick_world') if world_points is not None else [
+                [value, lift(point, value)] for value, (point, _) in zip(guide['tick_values'], ticks)],
+            'extensions': guide.get('extension_world', []),
             'figure_matrix': [list(row) for row in figure['matrix']] if figure else None,
             'figure_height': figure['height'] if figure else None}
     return json.dumps(data, separators=(',', ':'), ensure_ascii=False)
@@ -46,6 +50,11 @@ def ruler_layout(context, project, unit):
     points = [project(context.region, context.region_data, Vector(point)) for point in data['points']]
     if any(point is None for point in points):
         return None
+    middle_world = data.get('midpoint', (Vector(data['points'][0]) + Vector(data['points'][1])) / 2)
+    middle = project(context.region, context.region_data, Vector(middle_world))
+    if middle is None:
+        middle = (points[0] + points[1]) / 2
+    extensions = [project(context.region, context.region_data, Vector(point)) for point in data.get('extensions', [])]
     factor, suffix = unit(context.scene, settings, data['span'])
     ticks, tick_points, values = [], [], []
     for value, world in data['ticks']:
@@ -60,9 +69,11 @@ def ruler_layout(context, project, unit):
             'span': data['span'], 'height_text': f"{format_number(data['span'] * factor)} {suffix}",
             'label': data['label'], 'mode': data['source_mode'], 'ticks': ticks,
             'tick_points': tick_points, 'tick_values': values, 'points': [tuple(point) for point in points],
-            'collapsed': data['diagram'], 'scale': context.preferences.system.ui_scale,
+            'midpoint': tuple(middle),
+            'collapsed': data['diagram'], 'scale': context.preferences.system.ui_scale or 1.0,
             'world_anchor': data['anchor'], 'attachment_x': points[0].x, 'mouse': None,
-            'extensions': (), 'frozen': True, 'world_points': data['points']}
+            'extensions': [tuple(point) for point in extensions] if all(point is not None for point in extensions) else [],
+            'frozen': True, 'world_points': data['points']}
 
 
 def reference_layout(context, project):

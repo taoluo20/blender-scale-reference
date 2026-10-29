@@ -189,6 +189,13 @@ def reference_layout(context, guide, project, scene_scale, ignore_freeze=False, 
     if settings.frozen and not ignore_freeze:
         from . import freeze
         return freeze.reference_layout(context, project)
+    if guide.get('figure_matrix') is not None:
+        matrix = guide['figure_matrix']
+        screen = screen_bounds(context, mesh, matrix, project)
+        if screen is None:
+            return None
+        return {'matrix': matrix, 'bounds': screen,
+                'height': settings.reference_metres / scene_scale, 'mesh': mesh}
     from bpy_extras import view3d_utils
     region, rv3d = context.region, context.region_data
     height = settings.reference_metres / scene_scale
@@ -236,7 +243,7 @@ def _prepare_batch(mesh):
     _batch_key = key
 
 
-def draw_reference(context, model):
+def draw_reference(context, model, opacity=1.0):
     """Own depth buffer: the figure has self-occlusion without touching scene depth."""
     global _offscreen, _screen_size, _screen_batch, _image_shader
     region, rv3d = context.region, context.region_data
@@ -277,7 +284,7 @@ def draw_reference(context, model):
             _screen_size = (width, height)
         _image_shader.bind()
         _image_shader.uniform_sampler('image', _offscreen.texture_color)
-        _image_shader.uniform_float('color', (1, 1, 1, context.scene.height_axis.reference_opacity))
+        _image_shader.uniform_float('color', (1, 1, 1, context.scene.height_axis.reference_opacity * opacity))
         _screen_batch.draw(_image_shader)
     finally:
         gpu.state.viewport_set(*old_viewport)

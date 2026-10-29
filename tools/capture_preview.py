@@ -20,13 +20,15 @@ assert all(os.environ.get(key) for key in ('BLENDER_USER_CONFIG', 'BLENDER_USER_
 sys.path.insert(0, str(ROOT))
 import height_axis as addon
 
-OUTPUT = ROOT / 'docs' / 'images'
+OUTPUT = Path(os.environ.get('HEIGHT_AXIS_PREVIEW_OUTPUT', ROOT / 'docs' / 'images'))
 OUTPUT.mkdir(parents=True, exist_ok=True)
 TEMP = ROOT / 'verification' / 'preview-temporary'
 TEMP.mkdir(parents=True, exist_ok=True)
 bpy.context.preferences.filepaths.temporary_directory = str(TEMP)
 bpy.context.preferences.view.language = 'en_US'
 bpy.context.preferences.view.use_translate_interface = True
+bpy.context.preferences.view.show_splash = False
+addon.VIEW3D_PT_height_axis_appearance.bl_options = set()
 addon.register()
 scene = bpy.context.scene
 scene.unit_settings.system = 'METRIC'
@@ -60,15 +62,15 @@ evidence = []
 
 
 def setup():
-    space.show_region_ui = True
+    space.show_region_ui = '--auto' not in sys.argv
     space.shading.type = 'SOLID'
     space.shading.color_type = 'MATERIAL'
     space.shading.show_cavity = True
     space.overlay.show_floor = True
     space.overlay.show_extras = False
-    space.region_3d.view_perspective = 'ORTHO'
-    space.region_3d.view_rotation = (Quaternion((0, 0, 1), math.radians(20)) @
-                                    Quaternion((1, 0, 0), math.radians(74)))
+    space.region_3d.view_perspective = 'PERSP'
+    space.region_3d.view_rotation = (Quaternion((0, 0, 1), math.radians(12)) @
+                                    Quaternion((1, 0, 0), math.radians(90)))
     space.region_3d.view_location = (0, 0, 1.45)
     space.region_3d.view_distance = 7.5
     area.tag_redraw()
@@ -81,6 +83,14 @@ def screenshot(name):
         bpy.ops.screen.screenshot_area(filepath=str(OUTPUT / name), hide_props_region=False)
         evidence.append({'file': name, 'state': 'frozen' if scene.height_axis.frozen else guide['mode'].lower(),
                          'world_height': guide['span'], 'reference_height': figure['height'],
+                         'labels': addon.ruler_labels(bpy.context, guide),
+                         'midpoint': list(guide['midpoint']),
+                         'line_color': list(scene.height_axis.line_color),
+                         'text_color': list(scene.height_axis.text_color),
+                         'line_width': scene.height_axis.line_width,
+                         'tick_spacing': scene.height_axis.tick_spacing,
+                         'perspective': space.region_3d.view_perspective,
+                         'custom_font': bool(scene.height_axis.font_path),
                          'draw_error': addon._last_error})
 
 
@@ -95,8 +105,8 @@ def pin():
     with bpy.context.temp_override(window=window, area=area, region=region):
         scene.height_axis.frozen = True
         assert scene.height_axis.frozen
-    space.region_3d.view_rotation = (Quaternion((0, 0, 1), math.radians(42)) @
-                                    Quaternion((1, 0, 0), math.radians(66)))
+    space.region_3d.view_rotation = (Quaternion((0, 0, 1), math.radians(32)) @
+                                    Quaternion((1, 0, 0), math.radians(90)))
     space.region_3d.view_perspective = 'PERSP'
     area.tag_redraw()
 
@@ -106,11 +116,30 @@ def chinese():
     bpy.context.preferences.view.use_translate_interface = True
     translated = bpy.app.translations.pgettext_iface('Freeze')
     assert translated == '停止跟随', translated
+    assert bpy.app.translations.pgettext_iface('Ruler Appearance') == '尺子外观'
+    area.tag_redraw()
+
+
+def appearance():
+    scene.height_axis.line_width = 2.5
+    scene.height_axis.line_color = (0.3, 0.85, 0.55, 0.65)
+    scene.height_axis.text_color = (1, 0.8, 0.2, 0.8)
+    font = os.environ.get('HEIGHT_AXIS_TEST_FONT')
+    if font:
+        bpy.ops.view3d.height_axis_choose_font(filepath=font)
+    area.tag_redraw()
+
+
+def reset_appearance():
+    scene.height_axis.line_width = 1.1
+    scene.height_axis.line_color = (1, 1, 1, 0.65)
+    scene.height_axis.text_color = (1, 1, 1, 0.75)
+    bpy.ops.view3d.height_axis_default_font()
     area.tag_redraw()
 
 
 def finish():
-    (ROOT / 'verification' / 'preview-evidence.json').write_text(
+    (OUTPUT / 'preview-evidence.json' if OUTPUT != ROOT / 'docs' / 'images' else ROOT / 'verification' / 'preview-evidence.json').write_text(
         json.dumps({'blender': bpy.app.version_string, 'screenshots': evidence,
                     'simplified_chinese_translation_verified': True}, indent=2), encoding='utf-8')
     print('HEIGHT_AXIS_PREVIEWS_COMPLETE')
@@ -120,6 +149,8 @@ def finish():
 STAGES = [(lambda: screenshot('selected.png'), 0.7),
           (mouse, 1.5), (lambda: screenshot('mouse.png'), 0.7),
           (pin, 1.5), (lambda: screenshot('frozen.png'), 0.7),
+          (appearance, 1.0), (lambda: screenshot('appearance.png'), 0.7),
+          (reset_appearance, 1.0),
           (chinese, 1.5), (lambda: screenshot('chinese-ui.png'), 0.5), (finish, 0.1)]
 if '--chinese-only' in sys.argv:
     STAGES = [(mouse, 0.5), (pin, 1.0), (chinese, 1.0),
@@ -127,7 +158,8 @@ if '--chinese-only' in sys.argv:
 
 
 def advance():
-    if not (ROOT / 'verification' / 'PREVIEW_START').exists() or ui.active_panel_category != 'Scale':
+    if '--auto' not in sys.argv and (not (ROOT / 'verification' / 'PREVIEW_START').exists()
+                                     or ui.active_panel_category != 'Scale'):
         return 0.5
     if not STAGES:
         return None
@@ -138,4 +170,4 @@ def advance():
 
 setup()
 print('Open the Scale sidebar, then create verification/PREVIEW_START to capture the previews.')
-bpy.app.timers.register(advance, first_interval=2.0)
+bpy.app.timers.register(advance, first_interval=4.0)

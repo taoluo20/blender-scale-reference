@@ -1,23 +1,23 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """A passive height ruler. All mouse and keyboard events pass through."""
 
-import itertools
 import math
+from pathlib import Path
 import traceback
 
 import blf
 import bpy
 import gpu
 from bpy.app.handlers import persistent
-from bpy.props import BoolProperty, EnumProperty, FloatProperty, IntProperty, PointerProperty, StringProperty
+from bpy.props import BoolProperty, EnumProperty, FloatProperty, FloatVectorProperty, IntProperty, PointerProperty, StringProperty
 from bpy.types import Operator, Panel, PropertyGroup
 from bpy_extras import view3d_utils
 from bpy_extras.io_utils import ImportHelper
 from gpu_extras.batch import batch_for_shader
 from mathutils import Vector
 
-from .core import format_number, nice_step, tick_values
-from . import reference, freeze, localization
+from .core import format_number, metric_ticks, metric_units, ruler_detail, visible_line_fraction
+from . import reference, freeze, localization, fonts, placement
 
 
 _registered = False
@@ -50,6 +50,9 @@ def _scene_scale(scene):
 
 def _unit(scene, settings, span):
     unit = settings.units
+    if unit == 'AUTO':
+        metres = abs(span) * _scene_scale(scene)
+        unit = 'MM' if 0 < metres < 0.01 else 'CM' if 0 < metres < 1 else 'M'
     if unit == 'SCENE':
         if scene.unit_settings.system == 'IMPERIAL':
             unit = 'FT'
@@ -116,6 +119,16 @@ def selection_bounds(context):
     return low, high
 
 
+def selection_name(context):
+    objects = [obj for obj in context.selected_objects
+               if obj.visible_get(view_layer=context.view_layer) and _object_bounds(context, obj) is not None]
+    if not objects:
+        return ''
+    active = context.view_layer.objects.active
+    main = active if active in objects else objects[0]
+    return main.name if len(objects) == 1 else f'{main.name} (+{len(objects) - 1})'
+
+
 def _project(region, rv3d, point):
     result = view3d_utils.location_3d_to_region_2d(region, rv3d, point)
     if result is None or not all(math.isfinite(v) and abs(v) < 1e7 for v in result):
@@ -128,103 +141,128 @@ def ruler_layout(context, require_enabled=True):
     if not _needs_display(settings) or (require_enabled and not settings.enabled):
         return None
     if settings.frozen:
-        return freeze.ruler_layout(context, _project, _unit)
+        guide = freeze.ruler_layout(context, _project, _unit)
+        return _decorate_ruler(context, guide) if guide else None
     return _live_ruler_layout(context, require_enabled)
 
 
 def _live_ruler_layout(context, require_enabled=True):
-    """Return the exact draw model, also used by the Blender integration checks."""
+    """Place a vertical world-space ruler outside a view-independent envelope."""
     region, rv3d = context.region, context.region_data
     settings = _settings(context.scene)
     if (not _needs_display(settings) or (require_enabled and not settings.enabled)
             or not region or not rv3d):
         return None
-    ui_scale = context.preferences.system.ui_scale
-    offset = settings.left_offset * ui_scale
+    scale = _scene_scale(context.scene)
+    ui_scale = context.preferences.system.ui_scale or 1.0
+    right = rv3d.view_rotation @ Vector((1, 0, 0))
+    figure_height = settings.reference_metres / scale
+    mesh = settings.reference_mesh if settings.show_reference else None
+    figure_bounds = mesh.get('height_axis_bounds') if mesh else None
+    figure_radius = (math.hypot(max(abs(figure_bounds[0]), abs(figure_bounds[3])),
+                                max(abs(figure_bounds[1]), abs(figure_bounds[4]))) * figure_height
+                     if figure_bounds else 0)
     bounds = selection_bounds(context)
     if bounds:
         low, high = bounds
         span = max(0.0, high[2] - low[2])
-        bottom = Vector(((low[0] + high[0]) / 2, (low[1] + high[1]) / 2, low[2]))
-        top = bottom + Vector((0, 0, span))
-        p0, p1 = _project(region, rv3d, bottom), _project(region, rv3d, top)
-        if p0 is None or p1 is None:
-            return None
-        corners = [_project(region, rv3d, Vector(corner))
-                   for corner in itertools.product(*zip(low, high))]
-        visible = [point for point in corners if point is not None]
-        if not visible:
-            return None
-        if (max(p.x for p in visible) < 0 or min(p.x for p in visible) > region.width
-                or max(p.y for p in visible) < 0 or min(p.y for p in visible) > region.height):
-            return None
-        x = max(16 * ui_scale, min(p.x for p in visible) - offset)
-        x = min(x, region.width - 16 * ui_scale)
-        label = 'SELECTION' if len(context.selected_objects) > 1 else context.selected_objects[0].name
+        anchor = Vector(((low[0] + high[0]) / 2, (low[1] + high[1]) / 2, low[2]))
+        radius = math.hypot(high[0] - low[0], high[1] - low[1]) / 2
+        gap = settings.object_gap_metres / scale
+        label = selection_name(context)
         mode = 'SELECTION'
-        centre_y = (p0.y + p1.y) / 2
-        attachment_x, mouse_position = min(p.x for p in visible) - offset, None
+        identity = (mode, tuple(sorted(obj.as_pointer() for obj in context.selected_objects)))
+        mouse_position = None
     elif context.selected_objects:
         # Cameras, lights and empty helpers have no measurable surface height.
+        placement.forget(_view_key(context))
         return None
     else:
         hover = _hover.get(context.window.as_pointer())
         if not hover or hover[0] != context.area.as_pointer():
+            placement.forget(_view_key(context))
             return None
         mouse = Vector(hover[1])
-        bottom = view3d_utils.region_2d_to_location_3d(
+        anchor = view3d_utils.region_2d_to_location_3d(
             region, rv3d, mouse, context.scene.cursor.location)
-        span = settings.reference_metres / _scene_scale(context.scene)
-        bottom.z -= span / 2
-        top = bottom + Vector((0, 0, span))
-        p0, p1 = _project(region, rv3d, bottom), _project(region, rv3d, top)
-        if p0 is None or p1 is None:
-            return None
-        shift = mouse.y - (p0.y + p1.y) / 2
-        p0.y += shift
-        p1.y += shift
-        x = mouse.x - offset
-        label, mode, centre_y = 'REFERENCE', 'REFERENCE', mouse.y
-        attachment_x, mouse_position = x, tuple(mouse)
-    collapsed = abs(p1.y - p0.y) < 32 * ui_scale
-    if collapsed:
-        # Z has no useful vertical projection in a top/near-top view. The number
-        # remains exact; use an explicitly marked diagram rather than a fake scale.
-        half = 90 * ui_scale
-        p0.y, p1.y = centre_y - half, centre_y + half
+        shifted = view3d_utils.region_2d_to_location_3d(
+            region, rv3d, mouse - Vector((settings.left_offset * ui_scale, 0)), anchor)
+        gap, radius = (anchor - shifted).length, 0.0
+        span = figure_height
+        anchor.z -= span / 2
+        label = Path(settings.reference_name).stem if settings.reference_name else bpy.app.translations.pgettext_iface('Reference')
+        mode = 'REFERENCE'
+        identity = (mode,)
+        mouse_position = tuple(mouse)
+    goal = placement.target(anchor, right, span, radius, gap, figure_radius, figure_height,
+                            settings.reference_yaw, identity)
+    world = placement.follow(_view_key(context), goal, settings.follow_smoothing)
+    points = [_project(region, rv3d, point) for point in world['points']]
+    middle = _project(region, rv3d, world['midpoint'])
+    if any(point is None for point in points) or middle is None:
+        placement.forget(_view_key(context))
+        return None
+    p0, p1 = points
+    extensions = [_project(region, rv3d, point) for point in world['source_points']]
     factor, suffix = _unit(context.scene, settings, span)
-    display_span = span * factor
-    step_display = nice_step(display_span, p1.y - p0.y)
-    step = step_display / factor
-    ticks, values = [], []
-    for value in tick_values(span, step):
-        if collapsed or mode == 'REFERENCE':
-            # Reference endpoints have a common screen translation; preserve the
-            # perspective distribution of intermediate world-Z points as well.
-            if collapsed or span <= 1e-12:
-                y = p0.y + (p1.y - p0.y) * (value / span if span > 0 else 0)
-            else:
-                projected = _project(region, rv3d, bottom + Vector((0, 0, value)))
-                if projected is None:
-                    continue
-                y = projected.y + shift
-        else:
-            projected = _project(region, rv3d, bottom + Vector((0, 0, value)))
-            if projected is None:
-                continue
-            y = projected.y
-        ticks.append((y, f'{format_number(value * factor)} {suffix}'))
-        values.append(value)
-    return {'x': x, 'y0': p0.y, 'y1': p1.y, 'span': span,
-            'height_text': f'{format_number(display_span)} {suffix}',
-            'label': label[:32], 'mode': mode, 'ticks': ticks, 'tick_values': values,
-            'collapsed': collapsed, 'scale': ui_scale,
-            'world_anchor': tuple(bottom), 'attachment_x': attachment_x, 'mouse': mouse_position,
-            'extensions': ((p0.x, p0.y), (p1.x, p1.y)) if mode == 'SELECTION' and not collapsed else ()}
+    guide = {'x': p0.x, 'y0': p0.y, 'y1': p1.y, 'span': span,
+             'height_text': f'{format_number(span * factor)} {suffix}', 'label': label, 'mode': mode,
+             'points': [tuple(point) for point in points], 'midpoint': tuple(middle),
+             'world_points': [tuple(point) for point in world['points']],
+             'world_midpoint': tuple(world['midpoint']), 'world_right': tuple(world['right']),
+             'world_anchor': tuple(world['points'][0]), 'figure_matrix': world['figure_matrix'],
+             'attachment_x': p0.x, 'mouse': mouse_position,
+             'collapsed': (p1 - p0).length < 2 * ui_scale, 'scale': ui_scale,
+             'extension_world': [tuple(point) for point in world['source_points']] if mode == 'SELECTION' else [],
+             'extensions': [tuple(point) for point in extensions] if mode == 'SELECTION' and all(point is not None for point in extensions) else []}
+    return _decorate_ruler(context, guide)
+
+
+def _decorate_ruler(context, guide):
+    settings, region, rv3d = _settings(context.scene), context.region, context.region_data
+    span, scale = guide['span'], _scene_scale(context.scene)
+    a, b = (Vector(point) for point in guide['world_points'])
+    visible = visible_line_fraction(*guide['points'], region.width, region.height)
+    start, end = visible if visible else (0, 0)
+    if getattr(rv3d, 'is_perspective', False):
+        depths = [-(rv3d.view_matrix @ point).z for point in (a, b)]
+        def world_fraction(value):
+            denominator = depths[1] * (1 - value) + depths[0] * value
+            return value * depths[0] / denominator if denominator > 1e-12 else value
+        start, end = world_fraction(start), world_fraction(end)
+    centre = (start + end) / 2
+    delta = min(0.01, max(0.00001, (end - start) / 10))
+    sample = [_project(region, rv3d, a.lerp(b, fraction)) for fraction in (centre - delta / 2, centre + delta / 2)]
+    density = ((sample[1] - sample[0]).length / max(span * scale * delta, 1e-12)
+               if all(point is not None for point in sample) else 0)
+    density = placement.density(_view_key(context), density, settings.follow_smoothing)
+    guide['detail_alpha'] = ruler_detail(density * span * scale, guide['scale'])
+    guide['compact_alpha'] = 1 - guide['detail_alpha']
+    weights = metric_units(density)
+    guide['metric_units'] = weights
+    guide['pixels_per_metre'] = density
+    factor, suffix = _unit(context.scene, settings, span)
+    ticks, styles, world_ticks = [], [], []
+    values = metric_ticks(span * scale, density, (start * span * scale, end * span * scale),
+                          minimum_pixels=settings.tick_spacing * guide['scale']) if visible and guide['detail_alpha'] > 0.001 else []
+    for metres, alpha, length in values:
+        value = metres / scale
+        world = a.lerp(b, value / span) if span > 0 else a
+        point = _project(region, rv3d, world)
+        if point is None:
+            continue
+        label = f'{format_number(value * factor)} {suffix}'
+        ticks.append((tuple(point), label))
+        styles.append((tuple(point), alpha, length))
+        world_ticks.append((value, tuple(world)))
+    guide['tick_points'], guide['tick_styles'], guide['tick_world'] = ticks, styles, world_ticks
+    guide['ticks'] = [(point[1], label) for point, label in ticks]
+    guide['tick_values'] = [value for value, _ in world_ticks]
+    return guide
 
 
 def _view_key(context):
-    return (context.scene.as_pointer(), context.window.as_pointer(), context.area.as_pointer())
+    return (context.scene.as_pointer(), context.window.as_pointer(), context.area.as_pointer(), context.region.as_pointer())
 
 
 def _live_display(context):
@@ -232,10 +270,6 @@ def _live_display(context):
     if not guide:
         return None, None
     figure = reference.reference_layout(context, guide, _project, _scene_scale(context.scene), ignore_freeze=True)
-    if figure:
-        guide['x'] = figure['bounds'][0] - 22 * guide['scale']
-    guide['points'] = ((guide['x'], guide['y0']), (guide['x'], guide['y1']))
-    guide['tick_points'] = [((guide['x'], y), label) for y, label in guide['ticks']]
     stored_figure = figure or reference.reference_layout(
         context, guide, _project, _scene_scale(context.scene), ignore_freeze=True, ignore_visibility=True)
     _last_live[_view_key(context)] = freeze.capture(context, guide, stored_figure)
@@ -263,11 +297,13 @@ def _freeze_changed(self, context):
                     raw = _last_live.get(_view_key(context))
         if raw:
             self.frozen_data, self.freeze_message = raw, ''
+            placement.clear()
         else:
             self.frozen = False
             self.freeze_message = 'Display a ruler or figure in the viewport before freezing'
     else:
         self.frozen_data, self.freeze_message = '', ''
+        placement.clear()
     _changed(self, context)
 
 
@@ -286,21 +322,94 @@ def _lines(segments, color, width, region):
     batch.draw(_shader)
 
 
-def _text(text, x, y, size, color, region, right=True):
-    blf.size(0, size)
-    width, _ = blf.dimensions(0, text)
+def _text(text, x, y, size, color, region, right=True, font_id=0, max_width=None):
+    blf.size(font_id, size)
+    if max_width is not None and blf.dimensions(font_id, text)[0] > max_width:
+        if blf.dimensions(font_id, '...')[0] > max_width:
+            return
+        low, high = 0, len(text)
+        while low < high:
+            middle = (low + high + 1) // 2
+            if blf.dimensions(font_id, text[:middle] + '...')[0] <= max_width:
+                low = middle
+            else:
+                high = middle - 1
+        text = text[:low] + '...'
+    width, _ = blf.dimensions(font_id, text)
     if right:
         x -= width
-    x = max(5, min(x, region.width - width - 5))
     if y < 6 or y > region.height - size - 4:
         return
-    blf.enable(0, blf.SHADOW)
-    blf.shadow(0, 5, 0.0, 0.0, 0.0, 0.95)
-    blf.shadow_offset(0, 1, -1)
-    blf.color(0, *color)
-    blf.position(0, x, y, 0)
-    blf.draw(0, text)
-    blf.disable(0, blf.SHADOW)
+    blf.disable(font_id, blf.SHADOW)
+    blf.color(font_id, *color)
+    blf.position(font_id, x, y, 0)
+    blf.draw(font_id, text)
+
+
+def ruler_labels(context, model, unit=None, compact=False):
+    """Only physical half-height and full-height values, left of their marks."""
+    settings, region = _settings(context.scene), context.region
+    size = max(9, round(settings.font_size * model['scale']))
+    if unit is None and settings.units == 'AUTO' and model.get('metric_units'):
+        unit = max(model['metric_units'], key=lambda item: item[1])[0]
+    if unit:
+        factor, suffix = {'M': (1.0, 'm'), 'CM': (100.0, 'cm'), 'MM': (1000.0, 'mm')}[unit]
+        factor *= _scene_scale(context.scene)
+    else:
+        factor, suffix = _unit(context.scene, settings, model['span'])
+    points = [Vector(model['midpoint'])] if compact else [Vector(model['midpoint']), Vector(model['points'][1])]
+    values = [model['span']] if compact else [model['span'] / 2, model['span']]
+    name_height = max(8, round(size * 0.72)) + 4 * model['scale'] if model.get('label') else 0
+    labels = []
+    for index, (point, value) in enumerate(zip(points, values)):
+        if point.y < 0 or point.y > region.height:
+            continue
+        bottom_margin = 8 + name_height if index == len(points) - 1 else 8
+        y = max(bottom_margin, min(point.y - size * 0.35, region.height - size - 8))
+        labels.append(((point.x - 12 * model['scale'], y), f'{format_number(value * factor)} {suffix}'))
+    if len(labels) == 2 and abs(labels[0][0][1] - labels[1][0][1]) < size + name_height + 12:
+        return labels[1:]
+    return labels
+
+
+def ruler_name(context, model, compact=False):
+    if not model.get('label'):
+        return None
+    point = Vector(model['midpoint'] if compact else model['points'][1])
+    if point.y < 0 or point.y > context.region.height:
+        return None
+    scale = model['scale']
+    size = max(9, round(_settings(context.scene).font_size * scale))
+    small = max(8, round(size * 0.72))
+    numeric_y = max(8 + small + 4 * scale, min(point.y - size * 0.35, context.region.height - size - 8))
+    return ((point.x - 12 * scale, numeric_y - small - 4 * scale), model['label'], small)
+
+
+def ruler_readout(context, model, unit=None):
+    """Move one full-height readout between detailed and compact presentation."""
+    detail = model['detail_alpha']
+    normal = ruler_labels(context, model, unit)
+    compact = ruler_labels(context, model, unit, compact=True)
+    full_text = compact[0][1] if compact else model['height_text']
+    full = next((label for label in normal if label[1] == full_text), None)
+    labels = [(point, text, detail) for point, text in normal if text != full_text]
+    if full and compact:
+        point = Vector(compact[0][0]).lerp(Vector(full[0]), detail)
+        labels.append((tuple(point), full_text, 1.0))
+    elif full:
+        labels.append((*full, detail))
+    elif compact:
+        labels.append((*compact[0], 1 - detail))
+    normal_name, compact_name = ruler_name(context, model), ruler_name(context, model, compact=True)
+    name = None
+    if normal_name and compact_name:
+        point = Vector(compact_name[0]).lerp(Vector(normal_name[0]), detail)
+        name = (tuple(point), *normal_name[1:], 1.0)
+    elif normal_name:
+        name = (*normal_name, detail)
+    elif compact_name:
+        name = (*compact_name, 1 - detail)
+    return labels, name
 
 
 def _draw():
@@ -310,47 +419,64 @@ def _draw():
         if not _registered or context.area.type != 'VIEW_3D':
             return
         if not context.space_data.overlay.show_overlays:
+            placement.forget(_view_key(context))
             return
         model, figure = display_layout(context)
         if not model:
+            placement.forget(_view_key(context))
             return
         region, settings = context.region, _settings(context.scene)
-        if figure:
-            reference.draw_reference(context, figure)
+        detail = model['detail_alpha']
+        if figure and (not settings.enabled or detail > 0.001):
+            reference.draw_reference(context, figure, opacity=detail if settings.enabled else 1)
         if not settings.enabled:
             _last_error = ''
             return
-        scale, x, y0, y1 = model['scale'], model['x'], model['y0'], model['y1']
+        scale = model['scale']
         p0, p1 = (Vector(point) for point in model['points'])
-        direction = p1 - p0
-        normal = Vector((direction.y, -direction.x)).normalized() if direction.length > 1e-6 else Vector((1, 0))
-        color = (0.35, 0.86, 1.0, 1.0) if model['mode'] == 'SELECTION' else (1.0, 0.74, 0.33, 1.0)
-        size = max(9, round(settings.font_size * scale))
-        cap = 8 * scale
-        lines = [(p0, p1), (p0 - normal * cap, p0 + normal * cap),
-                 (p1 - normal * cap, p1 + normal * cap)]
-        lines += [(Vector(point) - normal * 5 * scale, point) for point, _ in model['tick_points']]
+        color = (*settings.line_color[:3], settings.line_color[3] * settings.opacity * detail)
+        cap, width = 7 * scale, settings.line_width * scale
+        middle = Vector(model['midpoint'])
+        anchors = []
+        for point in (p0, middle, p1):
+            if all((point - old).length > 2 * scale for old in anchors):
+                anchors.append(point)
+        marks = [(point - Vector((cap, 0)), point) for point in anchors]
         old_blend = gpu.state.blend_get()
         gpu.state.blend_set('ALPHA')
         try:
-            if model['extensions']:
-                extensions = [(point + normal * cap, (px, py)) for (px, py), point in
+            if detail > 0.001 and settings.show_extensions and model['extensions']:
+                extensions = [(point, (px, py)) for (px, py), point in
                               zip(model['extensions'], (p0, p1))]
-                _lines(extensions, (*color[:3], 0.22), 1.0 * scale, region)
-            _lines(lines, (0.01, 0.015, 0.02, 0.9), 4.0 * scale, region)
-            _lines(lines, color, 1.6 * scale, region)
-            for point, label in model['tick_points']:
+                _lines(extensions, (*color[:3], color[3] * 0.3), max(0.35, width * 0.45), region)
+            if detail > 0.001:
+                _lines([(p0, p1)], color, width, region)
+                _lines(marks, color, max(0.35, width * 0.65), region)
+            groups = {}
+            for point, alpha, length in model['tick_styles']:
                 point = Vector(point)
-                if (point - p1).length < (size + 8) and (point - p0).length > 1:
+                if any((point - mark).length <= 2 * scale for mark in anchors):
                     continue
-                _text(label, point.x - 12 * scale, point.y - size * 0.35, size, (0.91, 0.94, 0.98, 1), region)
-            upper, lower = max(y0, y1), min(y0, y1)
-            title_y = min(region.height - size - 10, upper + 14 * scale)
-            upper_point, lower_point = (p0, p1) if p0.y > p1.y else (p1, p0)
-            _text(model['height_text'], upper_point.x + cap, title_y, size + 2, color, region)
-            caption = ('FREEZE / ' + model['label']) if settings.frozen else (
-                'Z height / diagram' if model['collapsed'] else 'Z / ' + model['label'])
-            _text(caption, lower_point.x + cap, max(8, lower - 25 * scale), max(9, size - 2), color, region)
+                # Each decimal level shares an opacity, so a fade costs one draw call.
+                groups.setdefault(alpha, []).append((point - Vector((5 * length * scale, 0)), point))
+            for alpha, segments in groups.items():
+                _lines(segments, (*color[:3], color[3] * alpha), max(0.35, width * 0.65), region)
+            identifier = fonts.font_id(settings.font_path)
+            # Handoff between units without superimposing different numerals.
+            unit, unit_alpha = max(model['metric_units'], key=lambda item: item[1]) if settings.units == 'AUTO' else (None, 1)
+            size = max(9, round(settings.font_size * scale))
+            labels, name = ruler_readout(context, model, unit)
+            for (x, y), label, visibility in labels:
+                alpha = unit_alpha * visibility
+                if alpha <= 0.001:
+                    continue
+                text_color = (*settings.text_color[:3], settings.text_color[3] * settings.opacity * alpha)
+                _text(label, x, y, size, text_color, region, font_id=identifier)
+            if name and name[3] > 0.001:
+                (x, y), label, small, visibility = name
+                text_color = (*settings.text_color[:3], settings.text_color[3] * settings.opacity * visibility * 0.75)
+                _text(label, x, y, small, text_color, region, font_id=identifier,
+                      max_width=max(0, min(260 * scale, x - 6)))
         finally:
             gpu.state.blend_set(old_blend)
         _last_error = ''
@@ -400,6 +526,15 @@ def _service():
     if not _registered:
         return None
     _start_trackers()
+    keys = {(window.scene.as_pointer(), window.as_pointer(), area.as_pointer(), region.as_pointer())
+            for window in bpy.context.window_manager.windows for area in window.screen.areas
+            if area.type == 'VIEW_3D' for region in area.regions if region.type == 'WINDOW'}
+    placement.retain(keys)
+    if any(_needs_display(_settings(window.scene)) for window in bpy.context.window_manager.windows):
+        if placement.animating():
+            _redraw()
+        return 1 / 60
+    placement.clear()
     return 0.3
 
 
@@ -421,13 +556,16 @@ def _load_pre(*_args):
     _hover.clear()
     _bounds_cache.clear()
     _last_live.clear()
+    placement.clear()
     reference.clear_gpu()
+    fonts.clear()
 
 
 @persistent
 def _undo_changed(*_args):
     _bounds_cache.clear()
     _last_live.clear()
+    placement.clear()
     reference.clear_gpu()
     _redraw()
 
@@ -441,10 +579,26 @@ class HEIGHTAXIS_Settings(PropertyGroup):
     freeze_message: StringProperty(options={'HIDDEN', 'SKIP_SAVE'})
     reference_metres: FloatProperty(name='Reference Height (m)', default=1.8, min=0.001, soft_max=100,
                                     precision=3, description='Reference ruler and figure height, always entered in metres', update=_changed)
-    left_offset: IntProperty(name='Left Offset (px)', default=64, min=16, max=500, update=_changed)
+    left_offset: IntProperty(name='Mouse Gap (px)', default=64, min=16, max=500, update=_changed)
+    object_gap_metres: FloatProperty(name='Width Offset (m)', default=0.35, soft_min=-2, soft_max=5,
+                                    precision=3, update=_changed,
+                                    description='Offset from the widest horizontal extent; negative values move inside and may change surface clearance during orbit')
+    follow_smoothing: FloatProperty(name='Follow Smoothing (s)', default=0.12, min=0, max=1,
+                                    precision=3, update=_changed)
+    show_extensions: BoolProperty(name='Show Connection Lines', default=False, update=_changed)
     font_size: IntProperty(name='Font Size', default=14, min=10, max=28, update=_changed)
-    units: EnumProperty(name='Display Units', default='SCENE', update=_changed,
-                        items=[('SCENE', 'Scene', ''), ('M', 'm', ''), ('CM', 'cm', ''),
+    line_width: FloatProperty(name='Line Width (px)', default=1.1, min=0.25, max=8, precision=2, update=_changed)
+    tick_spacing: FloatProperty(name='Tick Spacing (px)', default=24, min=4, max=80, soft_max=48,
+                                 precision=1, update=_changed,
+                                 description='Minimum screen spacing for minor ticks to fade in; larger values show fewer ticks')
+    opacity: FloatProperty(name='Ruler Opacity', default=1, min=0, max=1, subtype='FACTOR', update=_changed)
+    line_color: FloatVectorProperty(name='Line Color', subtype='COLOR', size=4,
+                                    min=0, max=1, default=(1, 1, 1, 0.65), update=_changed)
+    text_color: FloatVectorProperty(name='Text Color', subtype='COLOR', size=4,
+                                    min=0, max=1, default=(1, 1, 1, 0.75), update=_changed)
+    font_path: StringProperty(name='Font File', subtype='FILE_PATH', default='', update=_changed)
+    units: EnumProperty(name='Display Units', default='AUTO', update=_changed,
+                        items=[('AUTO', 'Auto (m / cm / mm)', ''), ('SCENE', 'Scene', ''), ('M', 'm', ''), ('CM', 'cm', ''),
                                ('MM', 'mm', ''), ('FT', 'ft', ''), ('IN', 'in', '')])
     show_reference: BoolProperty(name='Show Reference Figure', default=False, update=_changed)
     reference_mesh: PointerProperty(type=bpy.types.Mesh)
@@ -452,6 +606,34 @@ class HEIGHTAXIS_Settings(PropertyGroup):
     reference_yaw: FloatProperty(name='Figure Rotation', subtype='ANGLE', default=0, update=_changed)
     reference_opacity: FloatProperty(name='Figure Opacity', default=0.8, min=0.05, max=1,
                                      subtype='FACTOR', update=_changed)
+
+
+class VIEW3D_OT_height_axis_choose_font(Operator, ImportHelper):
+    bl_idname = 'view3d.height_axis_choose_font'
+    bl_label = 'Choose Font File'
+    bl_description = 'Choose a local TTF, OTF or TTC font for the ruler labels'
+    bl_options = {'REGISTER', 'UNDO'}
+    filename_ext = ''
+    filter_glob: StringProperty(default='*.ttf;*.otf;*.ttc', options={'HIDDEN'})
+
+    def execute(self, context):
+        try:
+            fonts.font_id(self.filepath, strict=True)
+        except ValueError as error:
+            self.report({'ERROR'}, bpy.app.translations.pgettext_iface(str(error)))
+            return {'CANCELLED'}
+        context.scene.height_axis.font_path = self.filepath
+        return {'FINISHED'}
+
+
+class VIEW3D_OT_height_axis_default_font(Operator):
+    bl_idname = 'view3d.height_axis_default_font'
+    bl_label = 'Use Default Font'
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        context.scene.height_axis.font_path = ''
+        return {'FINISHED'}
 
 
 class VIEW3D_OT_height_axis_load_reference(Operator, ImportHelper):
@@ -561,40 +743,104 @@ class VIEW3D_PT_height_axis(Panel):
         row.prop(settings, 'frozen')
         if settings.freeze_message:
             layout.label(text=settings.freeze_message, icon='INFO')
-        column = layout.column()
-        column.active = bool(_needs_display(settings))
-        geometry = column.column()
-        geometry.enabled = not settings.frozen
-        geometry.prop(settings, 'reference_metres')
-        geometry.prop(settings, 'left_offset')
-        column.prop(settings, 'units')
-        column.prop(settings, 'font_size')
-        layout.separator()
-        layout.operator('view3d.height_axis_load_reference', icon='FILE_FOLDER')
-        if settings.reference_mesh:
-            layout.prop(settings, 'show_reference')
-            layout.label(text=settings.reference_name, icon='OUTLINER_OB_MESH')
-            row = layout.row()
-            row.enabled = not settings.frozen
-            row.prop(settings, 'reference_yaw')
-            layout.prop(settings, 'reference_opacity')
-            layout.operator('view3d.height_axis_clear_reference', icon='X')
-        if context.mode != 'OBJECT':
-            layout.label(text='Switch to Object Mode to load a figure', icon='INFO')
-        layout.separator()
         if settings.frozen:
             layout.label(text='Pinned in world space', icon='LOCKED')
-        else:
+        elif context.selected_objects:
             layout.label(text='Selection: view-left')
+        else:
             layout.label(text='No selection: mouse-left')
+        geometry = layout.column()
+        geometry.active = bool(_needs_display(settings))
+        geometry.enabled = not settings.frozen
+        geometry.prop(settings, 'reference_metres')
+        row = layout.row()
+        row.active = bool(_needs_display(settings))
+        row.prop(settings, 'units', text='Units')
         if not context.space_data.overlay.show_overlays:
-            layout.label(text='Enable viewport Overlays to see the guides', icon='INFO')
+            layout.label(text='Viewport Overlays are off', icon='INFO')
         if _last_error:
             layout.label(text='Draw error; see the system console', icon='ERROR')
 
 
-_CLASSES = (HEIGHTAXIS_Settings, VIEW3D_OT_height_axis_load_reference,
-            VIEW3D_OT_height_axis_clear_reference, VIEW3D_OT_height_axis_tracker, VIEW3D_PT_height_axis)
+class VIEW3D_PT_height_axis_reference(Panel):
+    bl_label = 'Reference Figure'
+    bl_idname = 'VIEW3D_PT_height_axis_reference'
+    bl_parent_id = 'VIEW3D_PT_height_axis'
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = 'Scale'
+
+    def draw(self, context):
+        layout, settings = self.layout, _settings(context.scene)
+        layout.operator('view3d.height_axis_load_reference', icon='FILE_FOLDER')
+        if settings.reference_mesh:
+            layout.prop(settings, 'show_reference')
+            row = layout.row(align=True)
+            row.label(text=settings.reference_name, icon='OUTLINER_OB_MESH', translate=False)
+            row.operator('view3d.height_axis_clear_reference', text='', icon='X')
+            row = layout.row()
+            row.enabled = settings.show_reference and not settings.frozen
+            row.prop(settings, 'reference_yaw')
+            row = layout.row()
+            row.active = settings.show_reference
+            row.prop(settings, 'reference_opacity')
+        if context.mode != 'OBJECT':
+            layout.label(text='Switch to Object Mode to load a figure', icon='INFO')
+
+
+class VIEW3D_PT_height_axis_placement(Panel):
+    bl_label = 'Placement & Follow'
+    bl_idname = 'VIEW3D_PT_height_axis_placement'
+    bl_parent_id = 'VIEW3D_PT_height_axis'
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = 'Scale'
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        layout, settings = self.layout, _settings(context.scene)
+        layout.active = bool(_needs_display(settings))
+        geometry = layout.column()
+        geometry.enabled = not settings.frozen
+        geometry.prop(settings, 'object_gap_metres', slider=True)
+        if settings.object_gap_metres < 0:
+            geometry.label(text='Inside widest extent', icon='INFO')
+            geometry.label(text='Orbit clearance may vary')
+        geometry.prop(settings, 'left_offset')
+        geometry.prop(settings, 'follow_smoothing', slider=True)
+        layout.prop(settings, 'show_extensions')
+
+
+class VIEW3D_PT_height_axis_appearance(Panel):
+    bl_label = 'Ruler Appearance'
+    bl_idname = 'VIEW3D_PT_height_axis_appearance'
+    bl_parent_id = 'VIEW3D_PT_height_axis'
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = 'Scale'
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        layout, settings = self.layout, _settings(context.scene)
+        layout.prop(settings, 'font_size')
+        layout.prop(settings, 'line_width')
+        layout.prop(settings, 'tick_spacing', slider=True)
+        layout.prop(settings, 'opacity', slider=True)
+        layout.prop(settings, 'line_color')
+        layout.prop(settings, 'text_color')
+        row = layout.row(align=True)
+        row.operator('view3d.height_axis_choose_font', icon='FILE_FOLDER')
+        if settings.font_path:
+            row.operator('view3d.height_axis_default_font', text='', icon='LOOP_BACK')
+            layout.label(text=Path(bpy.path.abspath(settings.font_path)).name, icon='FONT_DATA')
+        if fonts.unavailable(settings.font_path):
+            layout.label(text='Font unavailable; using Blender default', icon='INFO')
+
+
+_CLASSES = (HEIGHTAXIS_Settings, VIEW3D_OT_height_axis_choose_font, VIEW3D_OT_height_axis_default_font,
+            VIEW3D_OT_height_axis_load_reference, VIEW3D_OT_height_axis_clear_reference,
+            VIEW3D_OT_height_axis_tracker, VIEW3D_PT_height_axis, VIEW3D_PT_height_axis_reference,
+            VIEW3D_PT_height_axis_placement, VIEW3D_PT_height_axis_appearance)
 
 
 def register():
@@ -624,7 +870,9 @@ def unregister():
     _hover.clear()
     _bounds_cache.clear()
     _last_live.clear()
+    placement.clear()
     reference.clear_gpu()
+    fonts.clear()
     if _draw_handle is not None:
         bpy.types.SpaceView3D.draw_handler_remove(_draw_handle, 'WINDOW')
         _draw_handle = None

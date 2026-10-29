@@ -2,6 +2,18 @@
 
 **English** · [简体中文](#简体中文)
 
+## Tick spacing and left marks — 2026-10-29
+
+Blender 5.2.2 LTS passed **200 checks**: geometry/lifecycle 22, reference imports 61, Freeze 16, appearance/fonts 27 and motion/transitions/localization 74. New cases cover adjustable physical tick layers, continuous opacity, scene persistence while frozen, unchanged Freeze geometry and horizontal left-only marks under reversed projections. Native eye-level perspective captures compare 6 px dense and 24 px default spacing, frozen 6/48 px spacing, zoomed frozen detail and the Chinese control. All captured states reported no draw errors. Preview defaults and the saved review blend use non-isometric perspective. The rebuilt ZIP passed manifest validation, source-byte comparisons and reproducibility checks; installation and enabling succeeded in a temporary Blender configuration. These checks cover the final 1.3.0 package.
+
+## Visual review — 2026-10-29
+
+The final Blender 5.2.2 LTS run passed **188 checks**: geometry/lifecycle 22, reference imports 61, Freeze 16, appearance/fonts 26 and motion/transitions/localization 63. Five new checks cover duplicate-free detail and unit transitions, continuous readout placement, offscreen labels and the translated placement heading. Native viewport captures cover 11 states listed in the [visual review](VISUAL_REVIEW.md). Packaging checks were rerun after the visual changes. This review did not rerun Blender 4.5 or 5.1.
+
+## Local 1.3.0 Checks
+
+Blender 5.1.2 and 5.2.2 LTS each passed **125 checks**: the 99 existing checks below plus 26 appearance checks. New cases cover translucent defaults, sparse left-side labels, unit changes, crowded/offscreen labels, old/new Freeze midpoint data, appearance persistence, actual TTF loading and reuse, failed font selection, default reset and missing-file fallback. Each run used isolated user directories. The ZIP was installed and enabled in an isolated Blender 5.2.2 configuration. Native viewport exports exercised selection, mouse, Freeze, custom colors and an actual font without draw errors. These earlier appearance checks predate the final tick-spacing follow-up.
+
 ## Release 1.2.1
 
 | Check group | Blender 5.1.2 | Blender 5.2.2 LTS |
@@ -32,6 +44,18 @@ This record describes the exercised cases. Unlisted Blender versions, import var
 ---
 
 ## 简体中文
+
+### 小刻度间距与左侧横线 — 2026-10-29
+
+Blender 5.2.2 LTS 通过 **200 项检查**：几何及启停 22、参考导入 61、冻结 16、外观及字体 27、运动及过渡和翻译 74。新增覆盖可调物理刻度层级、连续透明度、冻结时保存重开、冻结几何保持不变，以及投影反向后横线仍水平朝左。真实平视透视截图比较了 6 px 密集与 24 px 默认、冻结时 6/48 px、冻结后缩放和中文控件；所有截图状态均未报告绘制异常。预览默认值和已保存审查场景采用非等距透视。重建 ZIP 通过清单、源码字节一致性及可重复构建检查，并在临时 Blender 配置中成功安装启用。这些检查覆盖最终 1.3.0 安装包。
+
+### 视觉审查 — 2026-10-29
+
+最终 Blender 5.2.2 LTS 检查通过 **188 项**：几何及启停 22、参考导入 61、冻结 16、外观及字体 26、运动及过渡和翻译 63。新增 5 项覆盖过渡读数无重复、连续位置、屏幕外标签及分组中文标题。原生视口截图覆盖[视觉审查记录](VISUAL_REVIEW.md)中的 11 种状态；视觉修改后重新进行了打包检查。本轮没有重新运行 Blender 4.5 或 5.1。
+
+### 本地 1.3.0 检查
+
+Blender 5.1.2 与 5.2.2 LTS 各通过 **125 项检查**：下方原有 99 项加上 26 项外观检查，覆盖半透明默认值、左侧精简标签、单位切换、拥挤与屏幕外标签、新旧冻结中点数据、外观保存、真实 TTF 加载及缓存、字体选择失败、恢复默认与文件缺失回退。每次使用隔离用户目录。安装包已在独立 Blender 5.2.2 配置中安装并启用；原生视口导出覆盖选中、鼠标、冻结、自定义颜色及实际字体，未出现绘制错误。这些较早的外观检查早于最终小刻度间距更新。
 
 ### 1.2.1 版本
 

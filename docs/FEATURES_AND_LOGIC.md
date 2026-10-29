@@ -27,8 +27,8 @@ The display checkboxes and placement are independent. Hiding both guides can ret
 
 1. Collect the visible selected geometric objects.
 2. Measure their combined minimum and maximum **world Z** using evaluated vertices. In Edit Mode use the current editable mesh.
-3. Project the bounds into the active viewport and place the guides beyond the left edge in screen space.
-4. Recalculate that placement as the view rotates. The configured figure height remains constant.
+3. Use the horizontal bounds' half-diagonal as a stable envelope. Place a vertical world-space ruler and figure outside it along the viewport's horizontal left direction, with the configured physical width offset.
+4. Ease position and orbit changes with frame-rate independent following. The configured figure height and ruler's world-Z span remain constant. A negative width offset moves inward and can reduce surface clearance during orbit.
 
 Only supported geometry is measured; cameras, lights, Empty helpers and armatures themselves are excluded. The ruler starts at zero at the geometry's lowest point.
 
@@ -42,7 +42,15 @@ The anchor is calculated at the view depth of the 3D Cursor. Entering the sideba
 
 Freeze captures the displayed ruler endpoints and tick positions in world space, together with the figure's complete transform and height. It does not attach those positions to the selected object. Each viewport projects the same stored geometry through its own camera.
 
-While frozen, geometry-changing controls are disabled. Units, font size, opacity and visibility remain editable. The snapshot, display settings and baked reference mesh persist in the scene when the blend file is saved. Unfreezing clears the snapshot and resumes the current selection or mouse placement. A successful new model import also resumes following; an unsuccessful import preserves the existing reference.
+While frozen, geometry-changing controls are disabled. Units, font size, line width, line/text RGBA, font choice, figure opacity and visibility remain editable. The snapshot, display settings and baked reference mesh persist in the scene when the blend file is saved. Unfreezing clears the snapshot and resumes the current selection or mouse placement. A successful new model import also resumes following; an unsuccessful import preserves the existing reference.
+
+Only the physical half-height and full-height values are labelled, to the screen-left of their projected marks. Perspective views project the actual world midpoint rather than averaging the screen endpoints. New Freeze snapshots store that midpoint; existing snapshots recover it from their world endpoints. Crowded labels reduce to the full height, and offscreen marks do not create labels at the viewport edge.
+
+Zoom fades decimal tick layers down to 1 mm. Auto units use projected density to select m, cm or mm; during a handoff only the dominant unit is drawn, at its transition opacity. Far and top views retain one full-height readout and a smaller object name. The same readout moves between midpoint and endpoint during the detail transition, without drawing duplicate text. Frozen guides retain these zoom-dependent display changes.
+
+**Tick Spacing (px)** controls the minimum screen separation at which a decimal layer starts fading in. The default is 24 UI-scaled pixels, compared with the previous fixed 6-pixel threshold. Larger values show fewer minor ticks; a layer reaches full opacity at four times its fade threshold. Tick positions remain exact physical multiples, down to 1 mm. Spacing saves with the scene and can change while frozen: display ticks are regenerated along the stored world segment without changing the snapshot or figure transform. Endpoint, half-height and minor marks all extend horizontally only screen-left from the axis.
+
+Appearance settings save with each scene. Local TTF, OTF and TTC fonts are loaded once and reused; font handles are released on file load and extension disable. Font files are external dependencies, so missing paths fall back to Blender's default font and display a panel warning. A failed font choice keeps the previous choice.
 
 ## Reference loading
 
@@ -66,7 +74,7 @@ The viewport draws this reference with its own depth buffer and a blue shaded st
 
 参照有隐藏、选中物体跟随、鼠标跟随及冻结四种状态。上方状态图展示其切换关系。显示开关与放置方式独立：隐藏参照时可以保留冻结位置，重新显示后恢复原位置。视口里从未显示过参照时，无法凭空冻结，界面会提示先显示尺子或人物。
 
-选中时，收集可见的选中几何体，计算评估顶点在世界 Z 轴上的整体范围，再投影至当前视口，将参照放在屏幕左边缘之外。旋转视口会重新计算左侧位置；人物保持设置的参考身高。编辑模式读取当前编辑网格。尺子最低点从 0 开始，不测量海拔；相机、灯光、Empty 和骨架本体不参与高度测量。
+选中时，收集可见的选中几何体，计算评估顶点在世界 Z 轴上的整体范围。以水平包围范围的半对角线构成稳定边界，沿视口水平左侧方向将三维竖直尺子与人物放在边界之外，并加入实际宽度偏移。位置与旋转变化使用与帧率无关的平滑跟随；人物身高及尺子的世界 Z 高度保持实际尺寸。负宽度偏移向内靠近，旋转时可能减少与表面的间隔。编辑模式读取当前编辑网格。尺子最低点从 0 开始，不测量海拔；相机、灯光、Empty 和骨架本体不参与高度测量。
 
 未选中时，以 3D Cursor 的视图深度为基础计算鼠标锚点，尺子和人物跟随当前 3D 视口内的鼠标，并保留左侧间隔。参考高度始终以米输入，再按场景单位缩放换算。鼠标进入侧栏或其他编辑器时，实时参照隐藏；会记住最后显示的位置，供侧栏 Freeze 捕获。
 
@@ -74,7 +82,15 @@ The viewport draws this reference with its own depth buffer and a blue shaded st
 
 冻结保存尺子端点、刻度的世界坐标，以及人物完整变换与高度，不再绑定选中物体。每个视口通过自己的相机投影同一份固定几何位置。
 
-冻结时锁定会改变参照几何形态的参数，仍可调整单位、字号、不透明度和显示开关。快照、显示设置及参考网格随场景保存。解除冻结后清除快照并恢复当前的选择或鼠标跟随。成功加载新模型也会恢复跟随；加载失败保留旧参照。
+冻结时锁定会改变参照几何形态的参数，仍可调整单位、字号、线宽、线与文字各自 RGBA、字体、人物不透明度和显示开关。快照、显示设置及参考网格随场景保存。解除冻结后清除快照并恢复当前的选择或鼠标跟随。成功加载新模型也会恢复跟随；加载失败保留旧参照。
+
+数值只标注实际半高与全高，位于各自投影刻度的屏幕左侧。透视视图投影真实的三维中点，不直接平均屏幕端点。新冻结快照保存中点，旧快照从世界端点恢复。空间拥挤时仅显示全高，屏幕外的刻度不会把文字挤到视口边缘。
+
+缩放时逐层渐变十进制刻度，最细到 1 mm。自动单位依据投影密度在 m、cm、mm 之间变化；交接时只绘制当前权重较高的一套文字，并保留过渡透明度。远景及俯视保留一个全高数值和较小物体名称；同一套读数在中点与顶点之间移动，避免过渡时重复绘制。冻结后仍保留这些随缩放变化的显示细节。
+
+**小刻度间距 (px)** 控制十进制层级开始渐显时的最小屏幕距离，默认 24 个随界面缩放的像素，原先固定阈值为 6。数值越大，小刻度越稀疏；屏幕间距达到阈值四倍时完全显示。刻度位置仍是准确的物理倍数，最细到 1 mm。设置随场景保存，冻结时可调整：沿已保存的世界线段重新生成显示刻度，不修改冻结快照或人物变换。上下端、半高及小刻度都只从竖线水平向屏幕左侧延伸。
+
+外观设置按场景保存。本地 TTF、OTF、TTC 字体加载后复用，读取文件和禁用扩展时释放字体资源。字体文件保留在外部，路径失效时回退到 Blender 默认字体并在侧栏提示；选择字体失败会保留原选择。
 
 ### 人物加载与交互
 

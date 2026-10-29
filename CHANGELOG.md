@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.3.0 — Ruler Appearance and Smooth Following
+
+- Add smooth world-space following, physical width offset, optional connectors and zoom-adaptive ticks/units.
+- Keep distant/top views readable with one height and object name; eliminate duplicate text during unit and detail transitions.
+- Group reference, placement/following and appearance controls; shorten the units label and show only the current state hint.
+- Translucent white ruler and text defaults; remove the bottom caption.
+- Keep only physical half-height and full-height labels on the screen-left side.
+- Thinner crossbars without duplicate tick overdraw; endpoint, half-height and minor marks extend only screen-left from the axis.
+- Add scene-saved minor tick spacing, defaulting to a sparser 24 px fade threshold. Adjust density while frozen without moving world positions.
+- Use eye-level, non-isometric perspective views by default in preview scripts.
+- Add line width, independent line/text RGBA and local TTF/OTF/TTC font selection.
+- Preserve appearance in saved scenes and allow edits while frozen; fall back to Blender's font when a font path is missing.
+- Retain compatibility with existing Freeze snapshots.
+
 ## 1.2.1 — Publication polish
 
 - English UI source labels with optional Simplified Chinese translations.
@@ -28,6 +42,20 @@
 ---
 
 ## 简体中文
+
+### 1.3.0 — 尺子外观与平滑跟随
+
+- 新增世界空间平滑跟随、实际宽度偏移、可选连接线及随缩放变化的刻度和单位。
+- 远景和俯视保留一个高度及物体名称；修复单位与细节过渡时的文字重叠。
+- 分组参考人物、放置跟随和外观设置，缩短单位标签，只显示当前状态提示。
+- 尺子与文字默认白色半透明，移除底部说明。
+- 只保留实际半高与全高数值，均位于屏幕左侧。
+- 横向刻度更细，避免重复绘制导致局部加深；上下端、半高及小刻度都只从竖线向屏幕左侧延伸。
+- 新增随场景保存的小刻度间距，默认 24 px 渐显阈值，显示更稀疏；冻结时仍可调整，不移动世界位置。
+- 预览脚本默认使用平视、非等距透视。
+- 新增线粗细、线与文字各自 RGBA、TTF/OTF/TTC 字体文件选择。
+- 外观随场景保存，冻结时仍可调整；字体文件缺失时回退到默认字体。
+- 兼容已有冻结快照。
 
 ### 1.2.1 — 发布整理
 
