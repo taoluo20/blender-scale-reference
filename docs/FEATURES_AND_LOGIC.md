@@ -35,6 +35,8 @@ The display checkboxes and placement are independent. **Only With Selection** de
 
 Only supported geometry is measured; cameras, lights, Empty helpers and armatures themselves are excluded. The ruler starts at zero at the geometry's lowest point.
 
+Enable **Show Ground Clearance** in the **Scale** panel to display the vertical difference between the lowest measured point and the ground reference. **World Z = 0** is the default. Choose **Relative to Object** and select a **Ground Object** to use its highest evaluated world Z, including transforms and modifiers. Values below the reference are negative. Frozen selections keep the captured lowest point. Object attachments save their own ground setting and use the current height of the assigned ground object. Scene settings save with the blend file.
+
 ## Mouse placement
 
 With no selection and **Only With Selection** disabled, the ruler and optional figure follow the mouse in the active 3D viewport. No object or model caption is shown, including when reopening an old frozen mouse reference. The whole figure stays left of the pointer with a configurable gap. Its height is specified in physical metres, converted through the scene's unit scale.
@@ -85,7 +87,9 @@ The viewport draws this reference with its own depth buffer and a neutral-gray s
 
 **仅选中时显示**默认开启，只有选中可见且可测量的几何体时才显示实时参照；已有显式冻结和物体绑定不受影响。跟随缓动默认 0.02 秒，保留轻微平滑。
 
-选中时，收集可见的选中几何体，计算评估顶点在世界 Z 轴上的整体范围。以水平包围范围的半对角线构成稳定边界，沿视口水平左侧方向将三维竖直尺子与人物放在边界之外，并加入实际宽度偏移。位置与旋转变化使用与帧率无关的平滑跟随；人物身高及尺子的世界 Z 高度保持实际尺寸。负宽度偏移向内靠近，旋转时可能减少与表面的间隔。编辑模式读取当前编辑网格。尺子最低点从 0 开始，不测量海拔；相机、灯光、Empty 和骨架本体不参与高度测量。
+选中时，收集可见的选中几何体，计算评估顶点在世界 Z 轴上的整体范围。以水平包围范围的半对角线构成稳定边界，沿视口水平左侧方向将三维竖直尺子与人物放在边界之外，并加入实际宽度偏移。位置与旋转变化使用与帧率无关的平滑跟随；人物身高及尺子的世界 Z 高度保持实际尺寸。负宽度偏移向内靠近，旋转时可能减少与表面的间隔。编辑模式读取当前编辑网格。尺子以几何体最低点为零刻度。相机、灯光、Empty 和骨架本体不参与高度测量。
+
+在 **Scale** 面板勾选**显示离地高度**，即可显示测量范围最低点与地面的垂直高度差。默认地面基准为**世界 Z = 0**。切换到**相对物体**并指定**地面物体**后，以该物体经过变换和修改器求值后的最高世界 Z 为基准。低于所选基准时显示负数。冻结参照保留冻结时的最低点，绑定参照各自保存地面设置，并使用所指定地面物体的当前高度。场景设置随 Blend 文件保存。
 
 取消**仅选中时显示**后，未选中时启用鼠标跟随。1.6.0 将鼠标位置及屏幕左侧偏移一起反投影到世界 Z=0；无人物时，尺子底部对应鼠标的屏幕高度与设定的像素间距，有人物时向左预留额外空间。这样固定零高度后也保持视觉对齐，不依赖 3D Cursor。地平线、视图后方及深度裁剪范围外的无效地面交点会跳过。
 

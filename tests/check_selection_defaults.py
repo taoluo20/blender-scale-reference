@@ -64,6 +64,9 @@ check('half-height checkbox has the extension Chinese translation',
       bpy.app.translations.pgettext_iface('Show Half-Height Value') == '\u663e\u793a\u534a\u9ad8\u6570\u503c')
 check('mouse-tip checkbox has the extension Chinese translation',
       bpy.app.translations.pgettext_iface('Ruler at Mouse Tip') == '\u5c3a\u5b50\u5bf9\u9f50\u9f20\u6807\u5c16\u7aef')
+check('ground-clearance checkbox and readout have Chinese translations',
+      bpy.app.translations.pgettext_iface('Show Ground Clearance') == '显示离地高度'
+      and bpy.app.translations.pgettext_iface('Clearance') == '离地')
 bpy.context.preferences.view.language = language
 
 settings.enabled = True
@@ -314,6 +317,35 @@ check('mouse labels reserve no caption space even with legacy nonempty labels',
 check('compact mouse presentation omits model names',
       addon.ruler_readout(ctx, dict(mouse_model, detail_alpha=0))[1] is None)
 
+clearance_model = dict(model, world_points=((0, 0, 1), (0, 0, 4.2)),
+                       extension_world=((0, 0, 2), (0, 0, 5.2)))
+check('ground clearance starts hidden with the world zero reference', not settings.show_ground_clearance
+      and settings.ground_reference == 'WORLD_ZERO'
+      and len(addon.ruler_readout(ctx, clearance_model)[0]) == 1)
+settings.show_ground_clearance = True
+labels, _ = addon.ruler_readout(ctx, clearance_model)
+check('ground clearance uses the actual evaluated base beside the bottom mark',
+      labels[0][1] == '3.2 m' and labels[-1][1].endswith(' 2 m')
+      and abs(labels[-1][0][1] - clearance_model['points'][0][1]) < settings.font_size)
+compact_model = dict(clearance_model, detail_alpha=0, points=((400, 80), (400, 80)), midpoint=(400, 80))
+labels, name = addon.ruler_readout(ctx, compact_model)
+check('compact ground clearance has room beside the height and object name',
+      len(labels) == 2 and all(abs(labels[-1][0][1] - y) >= settings.font_size
+                               for y in (labels[0][0][1], name[0][1])))
+settings.units = 'FT'
+scene.unit_settings.scale_length = 0.5
+underground = dict(clearance_model, extension_world=((-1, 0, -2), (-1, 0, 1.2)))
+check('underground clearance stays signed and follows scene scale and display units',
+      addon.ruler_readout(ctx, underground)[0][-1][1].endswith(' -3.281 ft'))
+scene.unit_settings.scale_length = 1
+settings.units = 'AUTO'
+grounded = dict(clearance_model, extension_world=((0, 0, 0), (0, 0, 3.2)))
+check('grounded clearance shows zero in the same Auto unit as the ruler',
+      [text.split()[-2:] for _, text, _ in addon.ruler_readout(ctx, grounded, unit='CM')[0]]
+      == [['320', 'cm'], ['0', 'cm']])
+settings.units = 'M'
+check('mouse rulers omit ground clearance even when enabled', len(addon.ruler_readout(ctx, mouse_model)[0]) == 1)
+
 with bpy.context.temp_override(area=area, region=region):
     settings.frozen = True
     raw = settings.frozen_data
@@ -333,32 +365,79 @@ with bpy.context.temp_override(area=area, region=region):
           settings.frozen_data == raw and guide['world_points'] == guide_with_half['world_points']
           and len(marks_without_half) == 3 and marks_without_half == draw_lines.call_args_list[1].args[0])
     settings.show_half_height = False
+    target.location.z += 4
+    bpy.context.view_layer.update()
+    frozen_guide = addon.ruler_layout(bpy.context)
+    check('frozen clearance retains the captured bounds after the object moves',
+          addon.ruler_readout(bpy.context, frozen_guide)[0][-1][1].endswith(' -1 m'))
+    settings.ground_reference = 'OBJECT_TOP'
+    check('relative clearance waits for a ground object',
+          len(addon.ruler_readout(bpy.context, frozen_guide)[0]) == 1)
+    ground = bpy.data.objects.new('Raised Ground', target.data)
+    scene.collection.objects.link(ground)
+    ground.location.z = 1
+    ground.scale.z = 0.5
+    array = ground.modifiers.new('Raised Surface', 'ARRAY')
+    array.use_relative_offset = False
+    array.use_constant_offset = True
+    array.constant_offset_displace = (0, 0, 2)
+    bpy.context.view_layer.update()
+    settings.ground_object = ground
+    check('relative clearance uses the transformed and modified ground object top',
+          addon.ruler_readout(bpy.context, frozen_guide)[0][-1][1].endswith(' -3.5 m'))
+    settings.frozen = False
+    live_guide = addon.ruler_layout(bpy.context)
+    check('live relative clearance measures from the selected base to the ground top',
+          addon.ruler_readout(bpy.context, live_guide)[0][-1][1].endswith(' 0.5 m'))
     bpy.ops.view3d.height_axis_attach()
     entry = scene.height_axis_attachments[-1]
     check('new attachments capture the hidden half-height style independently',
           not addon.attachments.style(entry).show_half_height)
     settings.show_half_height = True
+    settings.show_ground_clearance = False
+    settings.ground_reference = 'WORLD_ZERO'
+    ground.location.z += 1
+    bpy.context.view_layer.update()
     check('changing live half-height does not change the attachment snapshot',
           not addon.attachments.style(entry).show_half_height)
+    attached_guide, _, attached_settings = list(addon.attachments.layouts(bpy.context))[-1]
+    check('attached clearance retains its ground object and reacts when the ground moves',
+          attached_settings.show_ground_clearance and attached_settings.ground_object == ground
+          and addon.ruler_readout(bpy.context, attached_guide, settings=attached_settings)[0][-1][1].endswith(' -0.5 m'))
+    scene.collection.objects.unlink(ground)
+    bpy.context.view_layer.update()
+    check('an unlinked ground object leaves the main ruler reading visible',
+          len(addon.ruler_readout(bpy.context, attached_guide, settings=attached_settings)[0]) == 1)
+    scene.collection.objects.link(ground)
     legacy = json.loads(entry.config)
     del legacy['style']['show_half_height']
-    entry.config = json.dumps(legacy)
-    old_style = addon.attachments.style(entry)
+    del legacy['style']['show_ground_clearance']
+    del legacy['style']['ground_reference']
+    legacy_entry = scene.height_axis_attachments[0]
+    legacy_entry.config = json.dumps(legacy)
+    old_style = addon.attachments.style(legacy_entry)
     check('1.4.0 attachment configs remain valid and retain their historical half-height labels',
-          old_style is not None and old_style.show_half_height
+          old_style is not None and old_style.show_half_height and not old_style.show_ground_clearance
+          and old_style.ground_reference == 'WORLD_ZERO'
           and [text for _, text in addon.ruler_labels(ctx, model, settings=old_style)] == ['1.6 m', '3.2 m'])
 
 settings.only_with_selection = False
 settings.show_half_height = True
 settings.ruler_at_mouse = True
+settings.show_ground_clearance = True
+settings.ground_reference = 'OBJECT_TOP'
 saved = ROOT / 'verification' / f'selection-defaults-persistence-{bpy.app.version[0]}.{bpy.app.version[1]}.blend'
 bpy.ops.wm.save_as_mainfile(filepath=str(saved))
 bpy.ops.wm.open_mainfile(filepath=str(saved), load_ui=False)
 scene, settings = bpy.context.scene, bpy.context.scene.height_axis
 check('both new checkbox overrides survive save and reopen', not settings.only_with_selection and settings.show_half_height)
 check('mouse-tip placement survives save and reopen', settings.ruler_at_mouse)
+check('ground clearance mode and ground object survive save and reopen',
+      settings.show_ground_clearance and settings.ground_reference == 'OBJECT_TOP'
+      and settings.ground_object == scene.objects['Raised Ground']
+      and addon.attachments.style(scene.height_axis_attachments[-1]).ground_object == settings.ground_object)
 check('saved legacy attachments still decode after reopening',
-      len(scene.height_axis_attachments) == 2 and addon.attachments.style(scene.height_axis_attachments[-1]).show_half_height)
+      len(scene.height_axis_attachments) == 2 and addon.attachments.style(scene.height_axis_attachments[0]).show_half_height)
 fresh = bpy.data.scenes.new('Fresh Defaults')
 check('other fresh scenes retain selection-only and no midpoint defaults',
       fresh.height_axis.only_with_selection and not fresh.height_axis.show_half_height

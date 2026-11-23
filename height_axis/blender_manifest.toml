@@ -1,6 +1,6 @@
 schema_version = "1.0.0"
 id = "height_axis"
-version = "1.6.0"
+version = "1.7.0"
 name = "Scale Reference"
 tagline = "A viewport height ruler and optional reference figures for scale"
 maintainer = "Tao Luo (O_Pisces)"

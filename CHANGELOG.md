@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.7.0 - Ground Clearance
+
+- Add an optional clearance readout from the measured geometry's lowest world Z to world Z=0 or the highest evaluated world Z of a picked ground object.
+
 ## 1.6.0 - Mouse Placement and Ground Projection
 
 - Inverse-project mouse placement onto world Z=0, retaining the screen-left gap and matching the ruler base to the pointer's screen height. Handle perspective, orthographic and rolled views without changing physical height or subtle smoothing.
@@ -77,6 +81,10 @@
 ---
 
 ## 简体中文
+
+### 1.7.0 - 离地高度
+
+- 新增离地高度开关，可显示测量范围最低点相对世界 Z=0 或指定地面物体最高世界 Z 的高度差。
 
 ### 1.6.0 - 鼠标放置与地面投影
 

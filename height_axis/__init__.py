@@ -74,7 +74,7 @@ def _object_bounds(context, obj):
     key = (obj.as_pointer(), _epoch)
     if key in _bounds_cache:
         return _bounds_cache[key]
-    if obj.type not in {'MESH', 'CURVE', 'SURFACE', 'FONT', 'META', 'VOLUME'}:
+    if obj.type not in attachments.GEOMETRY_TYPES:
         return None
     temporary = None
     evaluated = None
@@ -399,17 +399,20 @@ def _text(text, x, y, size, color, region, right=True, font_id=0, max_width=None
     blf.draw(font_id, text)
 
 
-def ruler_labels(context, model, unit=None, compact=False, settings=None):
-    """Only physical half-height and full-height values, left of their marks."""
-    settings, region = settings or _settings(context.scene), context.region
-    size = max(9, round(settings.font_size * model['scale']))
+def _label_unit(context, model, unit, settings):
     if unit is None and settings.units == 'AUTO' and model.get('metric_units'):
         unit = max(model['metric_units'], key=lambda item: item[1])[0]
     if unit:
         factor, suffix = {'M': (1.0, 'm'), 'CM': (100.0, 'cm'), 'MM': (1000.0, 'mm')}[unit]
-        factor *= _scene_scale(context.scene)
-    else:
-        factor, suffix = _unit(context.scene, settings, model['span'])
+        return factor * _scene_scale(context.scene), suffix
+    return _unit(context.scene, settings, model['span'])
+
+
+def ruler_labels(context, model, unit=None, compact=False, settings=None):
+    """Physical half-height and full-height values, left of their marks."""
+    settings, region = settings or _settings(context.scene), context.region
+    size = max(9, round(settings.font_size * model['scale']))
+    factor, suffix = _label_unit(context, model, unit, settings)
     if compact:
         points, values = [Vector(model['midpoint'])], [model['span']]
     elif settings.show_half_height:
@@ -444,8 +447,52 @@ def ruler_name(context, model, compact=False, settings=None):
     return ((point.x - 12 * scale, numeric_y - small - 4 * scale), model['label'], small)
 
 
+def _ground_clearance_label(context, model, unit, settings, labels, name):
+    # Connection endpoints use evaluated bounds before follow smoothing.
+    base_z = (model.get('extension_world') or model['world_points'])[0][2]
+    ground_z = 0.0
+    if settings.ground_reference == 'OBJECT_TOP':
+        ground = settings.ground_object
+        if ground is None or ground.name not in context.view_layer.objects:
+            return None
+        bounds = _object_bounds(context, ground)
+        if bounds is None:
+            return None
+        ground_z = bounds[1][2]
+
+    base = Vector(model['points'][0])
+    scale = model['scale']
+    size = max(9, round(settings.font_size * scale))
+    min_y, max_y = 8, context.region.height - size - 8
+    if not 0 <= base.y <= context.region.height:
+        if not labels:
+            return None
+        x, preferred = labels[-1][0]
+    else:
+        x, preferred = base.x - 12 * scale, base.y - size * 0.35
+    preferred = max(min_y, min(preferred, max_y))
+    occupied = [(point[1], size) for point, _, alpha in labels if alpha > 0.001]
+    if name and name[3] > 0.001:
+        occupied.append((name[0][1], name[2]))
+    # Keep the reading beside the base when possible, including at compact zoom.
+    gap = 4 * scale
+    candidates = [preferred]
+    for y, height in occupied:
+        candidates.extend((y - size - gap, y + height + gap))
+    available = (y for y in candidates if min_y <= y <= max_y
+                 and all(y + size + gap <= bottom or y >= bottom + height + gap
+                         for bottom, height in occupied))
+    y = min(available, key=lambda y: abs(y - preferred), default=None)
+    if y is None:
+        return None
+    factor, suffix = _label_unit(context, model, unit, settings)
+    prefix = bpy.app.translations.pgettext_iface('Clearance')
+    return ((x, y), f'{prefix} {format_number((base_z - ground_z) * factor)} {suffix}', 1.0)
+
+
 def ruler_readout(context, model, unit=None, settings=None):
     """Move one full-height readout between detailed and compact presentation."""
+    settings = settings or _settings(context.scene)
     detail = model['detail_alpha']
     normal = ruler_labels(context, model, unit, settings=settings)
     compact = ruler_labels(context, model, unit, compact=True, settings=settings)
@@ -468,6 +515,10 @@ def ruler_readout(context, model, unit=None, settings=None):
         name = (*normal_name, detail)
     elif compact_name:
         name = (*compact_name, 1 - detail)
+    if settings.show_ground_clearance and model.get('mode') in {'SELECTION', 'ATTACHMENT'}:
+        clearance = _ground_clearance_label(context, model, unit, settings, labels, name)
+        if clearance:
+            labels.append(clearance)
     return labels, name
 
 
@@ -643,6 +694,10 @@ def _undo_changed(*_args):
     _redraw()
 
 
+def _ground_object_poll(settings, obj):
+    return obj.type in attachments.GEOMETRY_TYPES and obj.name in settings.id_data.objects
+
+
 class HEIGHTAXIS_Settings(PropertyGroup):
     enabled: BoolProperty(name='Show Scale Reference', default=False,
                           description='Show the selected geometry height, or a mouse-following reference ruler', update=_changed)
@@ -670,6 +725,12 @@ class HEIGHTAXIS_Settings(PropertyGroup):
                                  description='Minimum screen spacing for minor ticks to fade in; larger values show fewer ticks')
     show_half_height: BoolProperty(name='Show Half-Height Value', default=False, update=_changed,
                                    description='Label the physical midpoint in addition to the full height; keep tick spacing unchanged')
+    show_ground_clearance: BoolProperty(name='Show Ground Clearance', default=False, update=_changed,
+                                        description='Show the vertical difference between the lowest measured point and the ground reference')
+    ground_reference: EnumProperty(name='Ground Reference', default='WORLD_ZERO', update=_changed,
+                                   items=[('WORLD_ZERO', 'World Z = 0', 'Use the world XY plane as ground'),
+                                          ('OBJECT_TOP', 'Relative to Object', 'Use the ground object\'s highest world Z')])
+    ground_object: PointerProperty(name='Ground Object', type=bpy.types.Object, poll=_ground_object_poll, update=_changed)
     opacity: FloatProperty(name='Ruler Opacity', default=1, min=0, max=1, subtype='FACTOR', update=_changed)
     line_color: FloatVectorProperty(name='Line Color', subtype='COLOR', size=4,
                                     min=0, max=1, default=(1, 1, 1, 0.65), update=_changed)
@@ -843,6 +904,11 @@ class VIEW3D_PT_height_axis(Panel):
         row = layout.row()
         row.active = bool(_needs_display(settings))
         row.prop(settings, 'units', text='Units')
+        layout.prop(settings, 'show_ground_clearance')
+        if settings.show_ground_clearance:
+            layout.prop(settings, 'ground_reference')
+            if settings.ground_reference == 'OBJECT_TOP':
+                layout.prop(settings, 'ground_object')
         if not context.space_data.overlay.show_overlays:
             layout.label(text='Viewport Overlays are off', icon='INFO')
         if _last_error:

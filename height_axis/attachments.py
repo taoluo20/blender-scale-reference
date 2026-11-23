@@ -15,7 +15,8 @@ from bpy.types import Operator, Panel, PropertyGroup, UIList
 STYLE_FIELDS = ('enabled', 'show_reference', 'reference_metres', 'reference_name', 'reference_yaw',
                 'reference_opacity', 'object_gap_metres', 'left_offset', 'follow_smoothing',
                 'show_extensions', 'font_size', 'line_width', 'tick_spacing', 'opacity',
-                'line_color', 'text_color', 'font_path', 'units', 'show_half_height')
+                'line_color', 'text_color', 'font_path', 'units', 'show_half_height',
+                'show_ground_clearance', 'ground_reference')
 GEOMETRY_TYPES = {'MESH', 'CURVE', 'SURFACE', 'FONT', 'META', 'VOLUME'}
 
 
@@ -37,6 +38,8 @@ def config_data(raw):
             # 1.4.0 attachments always displayed the half-height label.
             saved = dict(data['style'])
             saved.setdefault('show_half_height', True)
+            saved.setdefault('show_ground_clearance', False)
+            saved.setdefault('ground_reference', 'WORLD_ZERO')
             if all(name in saved for name in STYLE_FIELDS):
                 return saved
     except (ValueError, TypeError, KeyError, AttributeError):
@@ -46,7 +49,8 @@ def config_data(raw):
 
 def style(entry):
     data = config_data(entry.config)
-    return SimpleNamespace(**data, frozen=False, reference_mesh=entry.reference_mesh) if data else None
+    return (SimpleNamespace(**data, frozen=False, reference_mesh=entry.reference_mesh,
+                            ground_object=entry.ground_object) if data else None)
 
 
 def cache_key(view_key, entry):
@@ -93,6 +97,7 @@ class HEIGHTAXIS_Attachment(PropertyGroup):
     selected: BoolProperty(name='Select for Batch', default=False)
     config: StringProperty(options={'HIDDEN'})
     reference_mesh: PointerProperty(type=bpy.types.Mesh)
+    ground_object: PointerProperty(type=bpy.types.Object)
 
 
 class VIEW3D_OT_height_axis_attach(Operator):
@@ -126,6 +131,8 @@ class VIEW3D_OT_height_axis_attach(Operator):
         entry.uid = uuid4().hex
         entry.target, entry.target_name = target, target.name
         entry.config = json.dumps({'version': 1, 'style': data}, separators=(',', ':'))
+        if data['ground_reference'] == 'OBJECT_TOP':
+            entry.ground_object = settings.ground_object
         # The normalized reference is immutable. ID pointers retain it across live replacements.
         if data['show_reference']:
             entry.reference_mesh = settings.reference_mesh

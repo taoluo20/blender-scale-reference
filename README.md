@@ -4,6 +4,8 @@ A viewport height ruler and reference figure that stay on the **view-left side**
 
 **English** · [简体中文](#简体中文)
 
+**Version 1.7.0** adds **Show Ground Clearance** to the **Scale** panel. It measures from the lowest point of the selected geometry to world Z=0 or the evaluated top of a chosen ground object. The value is negative below the chosen reference. Ground clearance also works with frozen selections and object attachments.
+
 **Version 1.6.0** adds **Ruler at Mouse Tip** and screen-matched mouse placement on world Z=0. Underground views automatically release the zero-height constraint. The internal ID remains `height_axis`, preserving existing scenes, frozen placements and object attachments.
 
 Update the existing extension rather than installing a second copy.
@@ -32,7 +34,7 @@ Use **Object Attachments → Attach to Object** to retain a reference beside the
 
 ## Install and use
 
-1. Download `scale-reference-1.6.0.zip` from the [1.6.0 release](https://github.com/taoluo20/blender-scale-reference/releases/tag/v1.6.0).
+1. Download `scale-reference-1.7.0.zip` from the [1.7.0 release](https://github.com/taoluo20/blender-scale-reference/releases/tag/v1.7.0).
 2. In Blender, open **Edit → Preferences → Get Extensions → menu → Install from Disk**, select the ZIP, and enable **Scale Reference**.
 3. In the 3D Viewport press **N**, open **Scale**, enable **Show Scale Reference**, and select geometry.
 
@@ -64,7 +66,7 @@ The interface uses English source labels and includes Simplified Chinese transla
 
 ## Compatibility and limits
 
-The manifest declares **Blender 4.5+**. Version 1.6.0 passed **336 checks on Blender 5.2.2 LTS**, including actual font loading, mouse-tip placement, projection alignment, underground release and saved-data compatibility. The ZIP passed isolated installation and installed-namespace checks. Twelve wide public PNGs cover ten native perspective states. Earlier baseline checks ran on 5.1.2; this release was not tested on 4.5 or 5.1. See [validation details](docs/VALIDATION.md).
+The manifest declares **Blender 4.5+**. Version 1.7.0 passed **350 checks on Blender 5.2.2 LTS**, including ground clearance, evaluated ground objects, frozen bounds, and saved attachment compatibility. The ZIP passed isolated installation and installed-namespace checks. See [validation details](docs/VALIDATION.md).
 
 - Height follows **world Z**, not an object's local axis. In Edit Mode the editable mesh is measured before final modifiers.
 - Unrealized instances are not included in the selection height. Realize or convert them first when needed.
@@ -90,6 +92,8 @@ Optional figure examples show Epic's UE 5.8.2 Manny in neutral gray; the default
 ---
 
 ## 简体中文
+
+**1.7.0** 在 **Scale** 面板新增**显示离地高度**。读数以选中几何体最低点为起点，可选择相对世界 Z=0 或指定地面物体求值后的最高点。低于基准时显示负值，冻结选区和物体绑定也支持此读数。
 
 **1.6.0** 新增 **Ruler at Mouse Tip / 尺子对齐鼠标尖端**，并修正鼠标参照在世界 Z=0 上的屏幕投影对齐。地下视图自动解除零高度约束；内部 ID 保持 `height_axis`，兼容已有场景、冻结与物体绑定。
 
@@ -117,7 +121,7 @@ Scale Reference 是 Blender 的视口高度尺与参考人物工具。参照始�
 
 ### 安装与使用
 
-1. 从 [1.6.0 发布页](https://github.com/taoluo20/blender-scale-reference/releases/tag/v1.6.0)下载 `scale-reference-1.6.0.zip`。
+1. 从 [1.7.0 发布页](https://github.com/taoluo20/blender-scale-reference/releases/tag/v1.7.0)下载 `scale-reference-1.7.0.zip`。
 2. 在 Blender 打开 **Edit → Preferences → Get Extensions → 右上角菜单 → Install from Disk**，选择 ZIP 并启用 Scale Reference。
 3. 3D 视口按 **N**，打开 **Scale** 页签，勾选 **Show Scale Reference / 显示尺度参考**并选择几何物体。
 
@@ -141,7 +145,7 @@ Scale Reference 是 Blender 的视口高度尺与参考人物工具。参照始�
 
 跟随在世界空间平滑变化，宽度偏移默认位于选中范围的水平包围之外，负值可向内靠近；连接线默认关闭。缩放时逐层显示十进制刻度，最细到 1 mm，自动单位在 m / cm / mm 之间变化。远景及俯视收为一个高度数值和较小的物体名称；过渡期间每套读数只绘制一次。
 
-清单声明 Blender 4.5+；1.6.0 在 **Blender 5.2.2 LTS 通过 336 项检查**，覆盖真实字体、鼠标尖端放置、投影对齐、地下解除约束及保存数据兼容。ZIP 已验证隔离安装与实际安装命名空间；10 种原生透视状态生成 12 张宽幅公开 PNG。较早的基础检查覆盖 5.1.2；本版本未在 4.5 或 5.1 测试。详见[验证记录](docs/VALIDATION.md)。
+清单声明支持 Blender 4.5+。1.7.0 在 **Blender 5.2.2 LTS 通过 350 项检查**，涵盖离地高度、地面物体求值、冻结边界和旧绑定兼容，并通过 ZIP 隔离安装与实际安装命名空间检查。详见[验证记录](docs/VALIDATION.md)。
 
 - 高度按世界 Z 轴测量。编辑模式读取修改器之前的当前编辑网格。
 - 未实体化实例不计入选中高度，需要时先 Realize Instances 或转换为实际几何体。

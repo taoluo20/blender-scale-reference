@@ -2,6 +2,10 @@
 
 **English** · [简体中文](#简体中文)
 
+## 1.7.0 ground clearance
+
+Blender 5.2.2 LTS passed **350 checks**, including measurement against world zero and transformed ground objects, signed values and units, frozen bounds, attachment settings and save/reopen. The ZIP passed manifest validation and isolated installation. The installed extension reproduced both ground reference modes and reopened an existing 1.5.0 file with two attachments.
+
 ## 1.6.0 mouse placement - 2026-10-29
 
 Blender 5.2.2 LTS passed **336 checks** with a real TTF font: the previous 297 checks plus 39 for grounded projection, underground release and mouse-tip placement. Coverage includes pixel alignment, perspective/orthographic/rolled views, non-metre scene scales, horizon and clipping rejection, mixed/hidden geometry, immediate ground restoration, figure-aware tip placement, Freeze independence, legacy attachments and save/reopen defaults.
@@ -68,6 +72,10 @@ This record describes the exercised cases. Unlisted Blender versions, import var
 ---
 
 ## 简体中文
+
+### 1.7.0 离地高度
+
+Blender 5.2.2 LTS 通过 **350 项检查**，覆盖世界零高度和地面物体基准、带符号读数及单位、冻结边界、绑定设置与保存重开。ZIP 通过清单校验和隔离安装。实际安装后验证了两种地面基准，并读取了含两条绑定的 1.5.0 工程。
 
 ### 1.6.0 鼠标放置 - 2026-10-29
 

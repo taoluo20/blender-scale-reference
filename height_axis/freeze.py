@@ -72,6 +72,7 @@ def ruler_layout(context, project, unit):
             'midpoint': tuple(middle),
             'collapsed': data['diagram'], 'scale': context.preferences.system.ui_scale or 1.0,
             'world_anchor': data['anchor'], 'attachment_x': points[0].x, 'mouse': None,
+            'extension_world': data.get('extensions', []),
             'extensions': [tuple(point) for point in extensions] if all(point is not None for point in extensions) else [],
             'frozen': True, 'world_points': data['points']}
 
